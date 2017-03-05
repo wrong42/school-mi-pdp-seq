@@ -18,6 +18,7 @@ class Graph
 		Graph(const Graph &);
 	  ~Graph();
 
+		void RemoveOneEdge();
 		bool AreNeighbours(int, int) const; 		
 		int GetEdgeIndex(int, int) const;
 	private:

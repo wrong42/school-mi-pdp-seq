@@ -15,6 +15,7 @@ Graph::Graph(int numberOfNodes)
 Graph::Graph(const Graph & src)
 {
 	m_NumberOfNodes = src.m_NumberOfNodes;
+	m_Edges = src.m_Edges;
 	m_AdjMatrixSize = src.m_AdjMatrixSize;
 	m_AdjMatrix = new bool[m_AdjMatrixSize];
 	m_NodeColors = new Color[m_NumberOfNodes];
@@ -61,4 +62,12 @@ int Graph::GetEdgeIndex(int node1, int node2) const
 	int edgeIndex = baseIndex + (node2 - node1);
 
 	return edgeIndex;
+}
+
+void Graph::RemoveOneEdge()
+{
+	Edge * edge = m_Edges.back();
+	int edgeIndex = GetEdgeIndex(edge->Node1, edge->Node2);
+	m_AdjMatrix[edgeIndex] = false;
+	m_Edges.pop_back();
 }
