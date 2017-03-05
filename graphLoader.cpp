@@ -13,12 +13,28 @@ Graph * GraphLoader::LoadGraph(const char * file)
 	}
 
 	ifstream ifs(file)
-	unsigned numberOfNodes, tmp;
+	unsigned numberOfNodes, tmp, index = 0;
 
 	ifs >> numberOfNodes;
 	Graph * graph = new Graph(numberOfNodes);
 
-	for (int i = 0; i < 
+
+	for (int i = 0; i < numberOfNodes; i++)
+	{
+		for (int j = 0; j < numberOfNodes; j++)
+		{
+			ifs >> tmp;
+
+			if (j > i)
+			{
+				graph->m_AdjMatrix[index++] = tmp == 0 ? false : true;
+				graph->m_Edges.add(new Edge(i,j));
+			}
+		}
+	}
+
+	ifs.close();
+	return graph; 
 }
 
 bool GraphLoader::FileExists(const char * file)
