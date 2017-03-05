@@ -71,3 +71,16 @@ void Graph::RemoveOneEdge()
 	m_AdjMatrix[edgeIndex] = false;
 	m_Edges.pop_back();
 }
+
+void Graph::RemoveEdge(unsigned index)
+{
+	Edge * edge = m_Edges.at(index);
+	int edgeIndex = GetEdgeIndex(edge->Node1, edge->Node2);
+	m_AdjMatrix[edgeIndex] = false;
+	
+	vector<Edge*>::iterator it = m_Edges.begin();
+	for (int i = 0; i < index; i++)
+		++it;
+	
+	m_Edges.erase(it);
+}

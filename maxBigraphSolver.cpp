@@ -10,10 +10,17 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & graph)
 		return &graph;
 	}
 
-	for (Edge* edge : graph.m_Edges)
+	// list<Edge*>::iterator it = m_Edges.begin(); it != m_Edges.end(); ++it
+	for (unsigned i = 0; i < graph.m_Edges.size(); i++)
 	{
-		
+		Graph * childGraph = new Graph(graph);
+		graph.RemoveEdge(i);
 	}	
+}
+
+void MaxBigraphSolver::FindMaxBigraphInternal(Graph & graph)
+{
+	
 }
 
 /***
