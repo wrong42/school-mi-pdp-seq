@@ -17,9 +17,14 @@ class Graph
 		Graph(int numberOfNodes);
 		Graph(const Graph &);
 	  ~Graph();
- 		
+
+		bool AreNeighbours(int, int) const; 		
+		int GetEdgeIndex(int, int) const;
 	private:
 		int GetSizeOfAdjMatrix() const;
+	
+	private:
+		int m_AdjMatrixSize;
 };
 
 #endif // __GRAPH_H__2222
