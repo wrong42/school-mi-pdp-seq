@@ -16,7 +16,10 @@ class Graph
 	public:
 		Graph(int numberOfNodes);
 		Graph(const Graph &);
-	  ~Graph(); 		
+	  ~Graph();
+ 		
+	private:
+		int GetSizeOfAdjMatrix() const;
 };
 
 #endif // __GRAPH_H__2222
