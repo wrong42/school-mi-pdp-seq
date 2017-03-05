@@ -13,5 +13,7 @@ int main(int args, char * argv[])
 
   Graph * graph = GraphLoader::LoadGraph(argv[1]);
 
-  return 0;
+
+	delete graph;
+	return 0;
 }
