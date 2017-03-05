@@ -9,4 +9,4 @@ struct Edge
 	Edge(int node1, int node2) : Node1(node1), Node2(node2) {}
 };
 
-#endif __EDGE_H__
+#endif // __EDGE_H__

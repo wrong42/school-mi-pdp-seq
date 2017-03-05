@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include "inputLoader.h"
+#include "graphLoader.h"
 
 using namespace std;
 
@@ -12,7 +12,7 @@ Graph * GraphLoader::LoadGraph(const char * file)
 		return new Graph(0);
 	}
 
-	ifstream ifs(file)
+	ifstream ifs(file);
 	unsigned numberOfNodes, tmp, index = 0;
 
 	ifs >> numberOfNodes;
@@ -28,7 +28,7 @@ Graph * GraphLoader::LoadGraph(const char * file)
 			if (j > i)
 			{
 				graph->m_AdjMatrix[index++] = tmp == 0 ? false : true;
-				graph->m_Edges.add(new Edge(i,j));
+				graph->m_Edges.push_back(new Edge(i,j));
 			}
 		}
 	}
@@ -39,6 +39,6 @@ Graph * GraphLoader::LoadGraph(const char * file)
 
 bool GraphLoader::FileExists(const char * file)
 {
-	ifstream ifs(file)
+	ifstream ifs(file);
 	return ifs.good();
 }

@@ -1,16 +1,16 @@
-#ifndef __GRAPH_H__
-#define __GRAPH_H__
+#ifndef __GRAPH_H__2222
+#define __GRAPH_H__2222
 
 #include <list>
 #include "edge.h"
-#include "color.h"
+#include "colors.h"
 
 class Graph
 {
 	public:
 		int m_NumberOfNodes;
 		bool * m_AdjMatrix;
-		list<Edge*> m_Edges;
+		std::list<Edge*> m_Edges;
 		Color * m_Colors;
 
 	public:
@@ -19,4 +19,4 @@ class Graph
 	  ~Graph(); 		
 };
 
-#endif // __GRAPH_H__
+#endif // __GRAPH_H__2222
