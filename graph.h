@@ -11,7 +11,7 @@ class Graph
 		int m_NumberOfNodes;
 		bool * m_AdjMatrix;
 		std::list<Edge*> m_Edges;
-		Color * m_Colors;
+		Color * m_NodeColors;
 
 	public:
 		Graph(int numberOfNodes);

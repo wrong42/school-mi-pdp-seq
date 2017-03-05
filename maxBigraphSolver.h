@@ -8,6 +8,9 @@ class MaxBigraphSolver
 	public:
 		Graph * FindMaxBigraph(Graph &);
 	private:
+		bool TryMakeBigraph(Graph &) const;
+		bool TryColorNode(Graph &, int) const;
+	private:
 		Graph * currentState;
 		Graph * bestState;
 };
