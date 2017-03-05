@@ -23,6 +23,12 @@ Graph::Graph(const Graph & src)
 	memset((void*)m_Colors, 0, m_NumberOfNodes * sizeof(Color));
 }
 
+Graph::~Graph()
+{
+	delete[] m_AdjMatrix;
+	delete[] m_Colors;
+}
+
 int Graph::GetSizeOfAdjMatrix() const
 {
 	int numberOfRows = m_NumberOfNodes - 1;
