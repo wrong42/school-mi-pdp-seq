@@ -22,6 +22,7 @@ class Graph
 		void RemoveEdge(unsigned);
 		bool AreNeighbours(int, int) const; 		
 		int GetEdgeIndex(int, int) const;
+		void Print() const;
 	private:
 		int GetSizeOfAdjMatrix() const;
 	

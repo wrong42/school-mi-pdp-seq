@@ -27,6 +27,7 @@ Graph * GraphLoader::LoadGraph(const char * file)
 
 			if (j > i)
 			{
+				cout << "GraphLoader::LoadGraph: i=" << i << " j=" << j << " readValue=" << tmp << endl;
 				graph->m_AdjMatrix[index++] = tmp == 0 ? false : true;
 				graph->m_Edges.push_back(new Edge(i,j));
 			}

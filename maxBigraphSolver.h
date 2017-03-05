@@ -6,13 +6,14 @@
 class MaxBigraphSolver
 {
 	public:
+				MaxBigraphSolver();
 		Graph * FindMaxBigraph(Graph &);
 	private:
 		void FindMaxBigraphInternal(Graph &);
 		bool TryMakeBigraph(Graph &) const;
 		bool TryColorNode(Graph &, int) const;
 	private:
-		Graph * bestState;
+		Graph * m_BestGraph;
 };
 
 #endif // __MAX_BIGRAPH_SOLVER_H__

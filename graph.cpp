@@ -10,6 +10,8 @@ Graph::Graph(int numberOfNodes)
 	m_AdjMatrixSize = GetSizeOfAdjMatrix();
 	m_AdjMatrix = new bool[m_AdjMatrixSize];
 	m_NodeColors = new Color[numberOfNodes];
+	
+	memset((void*)m_NodeColors, Undefined, numberOfNodes);
 }
 
 Graph::Graph(const Graph & src)
@@ -21,7 +23,7 @@ Graph::Graph(const Graph & src)
 	m_NodeColors = new Color[m_NumberOfNodes];
 	
 	memcpy((void*)m_AdjMatrix, src.m_AdjMatrix, m_AdjMatrixSize * sizeof(bool));
-	memset((void*)m_NodeColors, 0, m_NumberOfNodes * sizeof(Color));
+	memset((void*)m_NodeColors, Undefined, m_NumberOfNodes * sizeof(Color));
 }
 
 Graph::~Graph()
@@ -83,4 +85,21 @@ void Graph::RemoveEdge(unsigned index)
 		++it;
 	
 	m_Edges.erase(it);
+}
+
+void Graph::Print() const
+{
+	int index = 0;
+	
+	cout << "Graph::Print: " << endl;
+	for (int i = 0; i < m_NumberOfNodes; i++)
+	{
+		for (int j = i; j < m_NumberOfNodes; j++)
+		{
+			cout << m_AdjMatrix[index++] << " ";
+		}
+		
+		cout << endl;
+	}
+	
 }
