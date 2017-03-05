@@ -62,3 +62,11 @@ int Graph::GetEdgeIndex(int node1, int node2) const
 
 	return edgeIndex;
 }
+
+void Graph::RemoveOneEdge()
+{
+	Edge * edge = m_Edges.back();
+	int edgeIndex = GetEdgeIndex(edge->Node1, edge->Node2);
+	m_AdjMatrix[edgeIndex] = false;
+	m_Edges.pop_back();
+}
