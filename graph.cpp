@@ -15,6 +15,7 @@ Graph::Graph(int numberOfNodes)
 Graph::Graph(const Graph & src)
 {
 	m_NumberOfNodes = src.m_NumberOfNodes;
+	m_Edges = src.m_Edges;
 	m_AdjMatrixSize = src.m_AdjMatrixSize;
 	m_AdjMatrix = new bool[m_AdjMatrixSize];
 	m_NodeColors = new Color[m_NumberOfNodes];
