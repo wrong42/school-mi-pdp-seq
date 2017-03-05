@@ -5,7 +5,15 @@ using namespace std;
 
 Graph * MaxBigraphSolver::FindMaxBigraph(Graph & graph)
 {
-	
+	if (TryMakeBigraph(graph))
+	{
+		return &graph;
+	}
+
+	for (Edge* edge : graph.m_Edges)
+	{
+		
+	}	
 }
 
 /***
