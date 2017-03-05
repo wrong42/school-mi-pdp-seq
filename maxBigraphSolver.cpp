@@ -19,7 +19,7 @@ bool MaxBigraphSolver::TryMakeBigraph(Graph & graph) const
 	{
 		if (graph.m_NodeColors[i] == Undefined)
 		{
-			if (!TryColorNode(graph, i)
+			if (!TryColorNode(graph, i))
 			{
 				return false;
 			}	
