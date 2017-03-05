@@ -38,6 +38,11 @@ int Graph::GetSizeOfAdjMatrix() const
 
 bool Graph::AreNeighbours(int node1, int node2) const
 {
+	if (node1 == node2)
+	{
+		return false;
+	}
+
 	int edgeIndex = GetEdgeIndex(node1, node2);
 	return m_AdjMatrix[edgeIndex];
 }
