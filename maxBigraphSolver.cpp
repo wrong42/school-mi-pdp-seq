@@ -8,6 +8,11 @@ MaxBigraphSolver::MaxBigraphSolver()
 	m_BestGraph = new Graph(0);
 }
 
+MaxBigraphSolver::~MaxBigraphSolver()
+{
+	delete m_BestGraph;
+}
+
 Graph * MaxBigraphSolver::FindMaxBigraph(Graph & graph)
 {
 	if (TryMakeBigraph(graph))
