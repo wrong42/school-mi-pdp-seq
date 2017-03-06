@@ -10,8 +10,8 @@ Graph::Graph(int numberOfNodes)
 	m_AdjMatrixSize = GetSizeOfAdjMatrix();
 	m_AdjMatrix = new bool[m_AdjMatrixSize];
 	m_NodeColors = new Color[numberOfNodes];
-	
-	memset((void*)m_NodeColors, Undefined, numberOfNodes);
+
+	memset((void*)m_NodeColors, Undefined, numberOfNodes * sizeof(Color));
 }
 
 Graph::Graph(const Graph & src)
@@ -101,5 +101,12 @@ void Graph::Print() const
 		
 		cout << endl;
 	}
-	
+
+	cout << "\nNodeColors: " << endl;
+	for (int i = 0; i < m_NumberOfNodes; i++)
+	{
+		cout << m_NodeColors[i] << " ";
+	}
+
+	cout << endl;
 }
