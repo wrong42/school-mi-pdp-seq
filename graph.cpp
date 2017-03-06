@@ -41,17 +41,21 @@ int Graph::GetSizeOfAdjMatrix() const
 
 bool Graph::AreNeighbours(int node1, int node2) const
 {
+	cout << "Graph::AreNeighbours: Nodes: node1=" << node1 << ", node2=" << node2 << endl;
 	if (node1 == node2)
 	{
 		return false;
 	}
 
 	int edgeIndex = GetEdgeIndex(node1, node2);
+	cout << "Graph::AreNeighbours: AreNeighbours=" << m_AdjMatrix[edgeIndex] << endl;
 	return m_AdjMatrix[edgeIndex];
 }
 
 int Graph::GetEdgeIndex(int node1, int node2) const
 {
+	cout << "Graph::GetEdgeIndex: Nodes: node1=" << node1 << ", node2=" << node2 << endl;
+
 	if (node1 > node2)
 	{
 		int tmp = node1;
@@ -63,6 +67,7 @@ int Graph::GetEdgeIndex(int node1, int node2) const
 	int baseIndex = m_AdjMatrixSize - sum;
 	int edgeIndex = baseIndex + (node2 - node1);
 
+	cout << "Graph::GetEdgeIndex: Edge index = " << edgeIndex << endl;
 	return edgeIndex;
 }
 
@@ -76,6 +81,7 @@ void Graph::RemoveOneEdge()
 
 void Graph::RemoveEdge(unsigned index)
 {
+	cout << "Graph::RemoveEdge: Removing edge with index " << index << endl;
 	Edge * edge = m_Edges.at(index);
 	int edgeIndex = GetEdgeIndex(edge->Node1, edge->Node2);
 	m_AdjMatrix[edgeIndex] = false;
