@@ -94,7 +94,7 @@ void Graph::Print() const
 	cout << "Graph::Print: " << endl;
 	for (int i = 0; i < m_NumberOfNodes; i++)
 	{
-		for (int j = i; j < m_NumberOfNodes; j++)
+		for (int j = i; j < m_NumberOfNodes - 1; j++)
 		{
 			cout << m_AdjMatrix[index++] << " ";
 		}
