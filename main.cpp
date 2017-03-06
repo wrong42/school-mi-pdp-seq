@@ -15,9 +15,9 @@ int main(int args, char * argv[])
 	Graph * graph = GraphLoader::LoadGraph(argv[1]);
 	cout << "Graph loaded: Number of edges = " << graph->m_Edges.size() << endl;
 	graph->Print();
-	MaxBigraphSolver solver;
-	Graph * result = solver.FindMaxBigraph(*graph);
-	cout << "RESULT: NumberOfEdges = " << result->m_Edges.size() << endl;
+//	MaxBigraphSolver solver;
+//	Graph * result = solver.FindMaxBigraph(*graph);
+//	cout << "RESULT: NumberOfEdges = " << result->m_Edges.size() << endl;
 	delete graph;
 	return 0;
 }
