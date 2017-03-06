@@ -12,7 +12,9 @@ int main(int args, char * argv[])
 
 	if (args < 2) return 1;
 
-	Graph * graph = GraphLoader::LoadGraph(argv[1]);
+	GraphLoader loader;
+
+	Graph * graph = loader.LoadGraph(argv[1]);
 	cout << "Graph loaded: Number of edges = " << graph->m_Edges.size() << endl;
 	graph->Print();
 //	MaxBigraphSolver solver;

@@ -8,12 +8,20 @@
 class GraphLoader
 {
 	public:
-		static Graph * LoadGraph(const char*);
+		~GraphLoader();
+		Graph * LoadGraph(const char*);
 	private:
-		static bool FileExists(const char*);
-		static int GetNumberOfNodes(const std::string &);
+		bool FileExists(const char*) const;
+		void GetNumberOfNodes();
+		void OpenInputFile(const char*);
+		void CreateGraph();
+		void LoadGraphInternal();
+		void CloseInputFile();
+		void InsertNewEdge(int &, char, Edge*);
 	private:
-		static std::ifstream & inputFile;
+		std::ifstream * m_InputFile;
+		Graph * m_Graph;
+		int m_NumberOfGraphNodes;
 };
 
 #endif // __GRAPH_LOADER_H__
