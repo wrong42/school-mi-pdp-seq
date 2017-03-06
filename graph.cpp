@@ -65,7 +65,7 @@ int Graph::GetEdgeIndex(int node1, int node2) const
 
 	int sum = (m_NumberOfNodes - node1 - 1) * (m_NumberOfNodes - node1) / 2;
 	int baseIndex = m_AdjMatrixSize - sum;
-	int edgeIndex = baseIndex + (node2 - node1);
+	int edgeIndex = baseIndex + (node2 - node1 - 1);
 
 	cout << "Graph::GetEdgeIndex: Edge index = " << edgeIndex << endl;
 	return edgeIndex;
