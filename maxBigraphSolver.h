@@ -7,6 +7,7 @@ class MaxBigraphSolver
 {
 	public:
 				MaxBigraphSolver();
+				~MaxBigraphSolver();
 		Graph * FindMaxBigraph(Graph &);
 	private:
 		void FindMaxBigraphInternal(Graph &);
