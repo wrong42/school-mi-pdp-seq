@@ -18,6 +18,13 @@ int main(int args, char * argv[])
 //	MaxBigraphSolver solver;
 //	Graph * result = solver.FindMaxBigraph(*graph);
 //	cout << "RESULT: NumberOfEdges = " << result->m_Edges.size() << endl;
+
+	for (int i = 0; i < graph->m_Edges.size(); i++)
+	{
+		delete graph->m_Edges[i];
+	}
+
+	graph->m_Edges.clear();
 	delete graph;
 	return 0;
 }
