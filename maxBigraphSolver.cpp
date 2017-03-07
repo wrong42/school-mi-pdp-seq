@@ -5,7 +5,7 @@
 
 using namespace std;
 
-MaxBigraphSolver::MaxBigraphSolver()
+MaxBigraphSolver::MaxBigraphSolver() : m_BigraphMaker()
 {
 	m_BestGraph = new Graph(0);
 }
@@ -114,59 +114,7 @@ bool MaxBigraphSolver::GraphHasBeenProcessed(const Graph & graph) const
 *<param> The graph to color. </param>
 *<return> True if it is possible to color the graph with 2 colors, otherwise false.</return>
 ***/
-bool MaxBigraphSolver::TryMakeBigraph(Graph & graph) const
+bool MaxBigraphSolver::TryMakeBigraph(Graph & graph)
 {
-	queue<int> nodesToColor;
-	set<int> processedNodes;
-
-	/* Initialize queue with nodes to color. First node colored White */
-	graph.m_NodeColors[0] = White;
-	nodesToColor.push(0);
-
-	while(1)
-	{
-		//cout << "MaxBigraphSolver::TryMakeBigraph: size of processedNodes = " << processedNodes.size() << endl;
-		int nodeIndex = nodesToColor.front();
-		nodesToColor.pop();
-		Color neighbourColor = graph.m_NodeColors[nodeIndex] == Black ? White : Black;
-		
-		//cout << "MaxBigraphSolver::TryMakeBigraph: Colorring neighbours of node " << nodeIndex << " (" << graph.m_NodeColors[nodeIndex] << ")";
-		//cout << " to color: " << neighbourColor << endl; 
-		if (!graph.ColorNeighbourNodes(nodeIndex, neighbourColor))
-		{
-			//cout << "MaxBigraphSolver::TryMakeBigraph: UNABLE TO COLOR GRAPH" << endl;
-			return false;
-		}
-
-		for (int i = 0; i < graph.m_NumberOfNodes; i++)
-		{
-			if (graph.AreNeighbours(nodeIndex, i))
-			{
-				if (processedNodes.find(i) == processedNodes.end())
-				{
-					//cout << "MaxBigraphSolver::TryMakeBigraph: Pushing not processed node: " << i << " to nodeToColor queue" << endl;
-					nodesToColor.push(i);
-				}
-			}
-		}
-
-		processedNodes.insert(nodeIndex);
-	
-		if (nodesToColor.empty())
-		{
-			int notColoredNode = graph.GetFirstUncoloredNode(); 
-			//cout << "MaxBigraphSolver::TryMakeBigraph: Nodes to color queue is empty. Index of first not yet colored node: " << notColoredNode << endl;
-			if (notColoredNode < 0)
-			{
-				break;
-			}
-			else
-			{
-				graph.m_NodeColors[notColoredNode] = White;
-				nodesToColor.push(notColoredNode);
-			}
-		}
-	}
-
-	return true;
+	return m_BigraphMaker.MakeBigraph(graph);
 }

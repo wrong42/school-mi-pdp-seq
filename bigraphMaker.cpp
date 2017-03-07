@@ -6,15 +6,15 @@ using namespace std;
 bool BigraphMaker::MakeBigraph(Graph & graph)
 {
 	m_Graph = & graph;
-	
 	InitializeQueue();
-
 	return ColorNodes();
 }
 
 /* Initialize queue with nodes to color. First node colored White */
 void BigraphMaker::InitializeQueue()
 {
+	m_ColoredNodes = queue<int>();
+	m_ProcessedNodes.clear();
 	m_Graph->m_NodeColors[0] = White;
 	m_ColoredNodes.push(0);
 }
@@ -26,11 +26,11 @@ bool BigraphMaker::ColorNodes()
 		int nodeIndex = GetNextColoredNode();
 		Color neighbourColor = GetNeighbourColor(nodeIndex);
 		
-		//cout << "MaxBigraphSolver::TryMakeBigraph: Colorring neighbours of node " << nodeIndex << " (" << m_Graph->m_NodeColors[nodeIndex] << ")";
+		//cout << "BigraphMaker::ColorNodes: Colorring neighbours of node " << nodeIndex << " (" << m_Graph->m_NodeColors[nodeIndex] << ")";
 		//cout << " to color: " << neighbourColor << endl; 
 		if (!m_Graph->ColorNeighbourNodes(nodeIndex, neighbourColor))
 		{
-			//cout << "MaxBigraphSolver::TryMakeBigraph: UNABLE TO COLOR GRAPH" << endl;
+			//cout << "BigraphMaker::ColorNodes: UNABLE TO COLOR GRAPH" << endl;
 			return false;
 		}
 
@@ -67,7 +67,7 @@ void BigraphMaker::AddNodeNeighboursToQueue(int nodeIndex)
 		{
 			if (m_ProcessedNodes.find(i) == m_ProcessedNodes.end())
 			{
-				//cout << "MaxBigraphSolver::TryMakeBigraph: Pushing not processed node: " << i << " to nodeToColor queue" << endl;
+				//cout << "BigraphMaker::ColorNodes: Pushing not processed node: " << i << " to nodeToColor queue" << endl;
 				m_ColoredNodes.push(i);
 			}
 		}
@@ -76,6 +76,7 @@ void BigraphMaker::AddNodeNeighboursToQueue(int nodeIndex)
 
 void BigraphMaker::AddNodeToProcessedNodes(int nodeIndex)
 {
+	//cout << "BigraphMaker::AddNodeToProcessedNodes: Adding node " << nodeIndex << " to processed nodes" << endl;
 	m_ProcessedNodes.insert(nodeIndex);
 }
 
@@ -91,7 +92,7 @@ void BigraphMaker::AddNotColoredNodeIfAny()
 	}
 
 	int notColoredNode = m_Graph->GetFirstUncoloredNode(); 
-	//cout << "MaxBigraphSolver::TryMakeBigraph: Nodes to color queue is empty. Index of first not yet colored node: " << notColoredNode << endl;
+	//cout << "BigraphMaker::ColorNodes: Nodes to color queue is empty. Index of first not yet colored node: " << notColoredNode << endl;
 	if (notColoredNode > -1)
 	{
 		m_Graph->m_NodeColors[notColoredNode] = White;
