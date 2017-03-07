@@ -14,26 +14,43 @@ MaxBigraphSolver::~MaxBigraphSolver()
 	//	delete m_BestGraph;
 }
 
-Graph * MaxBigraphSolver::FindMaxBigraph(Graph & graph)
+Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 {
-	if (TryMakeBigraph(graph))
-	{
-		cout << "MaxBigraphSolver::FindMaxBigraph: Original graph is a bigraph" << endl;
-		return &graph;
-	}
+	m_GraphStack.push(&originalGraph);
 
-	m_OriginalGraph = &graph;
-
-	for (unsigned i = 0; i < graph.m_Edges.size(); i++)
+	while(!m_GraphStack.empty())
 	{
-		Graph * childGraph = new Graph(graph);
-		childGraph->RemoveEdge(i);
-		FindMaxBigraphInternal(*childGraph);
-		if (childGraph != m_BestGraph)
+		//cout << "Stack is not empty: Number of elements = " << m_GraphStack.size() << endl;
+		Graph * graph = m_GraphStack.top();
+		m_GraphStack.pop();
+
+
+		if (graph->m_Edges.size() > m_BestGraph->m_Edges.size())
 		{
-			delete childGraph;
+			//cout << "GraphStack::POP: NumberOfGraphEdges: " << graph->m_Edges.size() << endl;
+			if (TryMakeBigraph(*graph))
+			{
+				cout << "FOUND BETTER GRAPH: NumberOfEdges = " << graph->m_Edges.size() << endl;
+				if (m_BestGraph != &originalGraph)
+					delete m_BestGraph;
+				m_BestGraph = graph;
+				continue;
+			}
+
+			if (graph->m_Edges.size() - 1 > m_BestGraph->m_Edges.size())
+			{
+				for (unsigned i = 0; i < graph->m_Edges.size(); i++)
+				{
+					Graph * childGraph = new Graph(*graph);
+					childGraph->RemoveEdge(i);
+					m_GraphStack.push(childGraph);
+				}
+			}
 		}
-	}		
+
+		if (graph != &originalGraph)
+			delete graph;
+	}
 
 	return m_BestGraph;
 }
@@ -73,7 +90,12 @@ void MaxBigraphSolver::FindMaxBigraphInternal(Graph & graph)
 bool MaxBigraphSolver::TryMakeBigraph(Graph & graph) const
 {
 	//cout << "MaxBigraphSolver.TryMakeBigraph: coloring " << graph.m_NumberOfNodes << " nodes" << endl;
-	
+	unsigned minimumNumberOfEdges = graph.m_NumberOfNodes - 1;
+	if (graph.m_Edges.size() <= minimumNumberOfEdges)
+	{
+		return true;
+	}
+
 	for (int i = 0; i < graph.m_NumberOfNodes; i++)
 	{
 		if (graph.m_NodeColors[i] == Undefined)
