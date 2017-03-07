@@ -41,8 +41,9 @@ void GraphLoader::LoadGraphInternal()
 		{
 			if (j > i)
 			{
-				cout << "GraphLoader::LoadGraph: i=" << i << " j=" << j << " readValue=" << line[j] << endl;
-				InsertNewEdge(index, line[j], new Edge(i,j));
+				//cout << "GraphLoader::LoadGraph: i=" << i << " j=" << j << " readValue=" << line[j] << endl;
+				Edge * e = new Edge(i, j);
+				InsertNewEdge(index, line[j], e);
 			}
 		}
 
@@ -55,16 +56,18 @@ void GraphLoader::InsertNewEdge(int & index, char value, Edge * edge)
 	{
 		case '0':
 			m_Graph->m_AdjMatrix[index++] = false;
-			m_Graph->m_Edges.push_back(edge);
+			delete edge;
 			break;
 		case '1':
 			m_Graph->m_AdjMatrix[index++] = true;
 			m_Graph->m_Edges.push_back(edge);
 			break;
 		case '\n':
+			delete edge;
 			break;
 		default:
 			cout << "ERROR> GraphLoader::LoadGraph: Invalid character in AdjMatrix: " << value << endl;
+			delete edge;
 			delete m_Graph;
 			throw std::invalid_argument( "Invalid character in AdjMatrix" );
 	}

@@ -15,6 +15,7 @@ class MaxBigraphSolver
 		bool TryColorNode(Graph &, int) const;
 	private:
 		Graph * m_BestGraph;
+		Graph * m_OriginalGraph;
 };
 
 #endif // __MAX_BIGRAPH_SOLVER_H__

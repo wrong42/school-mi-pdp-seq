@@ -14,10 +14,10 @@ Graph::Graph(int numberOfNodes)
 	memset((void*)m_NodeColors, Undefined, numberOfNodes * sizeof(Color));
 }
 
-Graph::Graph(const Graph & src)
+Graph::Graph(const Graph & src) : m_Edges(src.m_Edges)
 {
 	m_NumberOfNodes = src.m_NumberOfNodes;
-	m_Edges = src.m_Edges;
+	//m_Edges = src.m_Edges;
 	m_AdjMatrixSize = src.m_AdjMatrixSize;
 	m_AdjMatrix = new bool[m_AdjMatrixSize];
 	m_NodeColors = new Color[m_NumberOfNodes];
@@ -73,6 +73,7 @@ int Graph::GetEdgeIndex(int node1, int node2) const
 
 void Graph::RemoveOneEdge()
 {
+	//cout << "Graph::RemoveOneEdge: Removing one edge" << endl;
 	Edge * edge = m_Edges.back();
 	int edgeIndex = GetEdgeIndex(edge->Node1, edge->Node2);
 	m_AdjMatrix[edgeIndex] = false;
@@ -87,7 +88,7 @@ void Graph::RemoveEdge(unsigned index)
 	m_AdjMatrix[edgeIndex] = false;
 	
 	vector<Edge*>::iterator it = m_Edges.begin();
-	for (int i = 0; i < index; i++)
+	for (unsigned i = 0; i < index; i++)
 		++it;
 	
 	m_Edges.erase(it);

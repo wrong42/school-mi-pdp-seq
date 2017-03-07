@@ -15,18 +15,22 @@ int main(int args, char * argv[])
 	GraphLoader loader;
 
 	Graph * graph = loader.LoadGraph(argv[1]);
-	cout << "Graph loaded: Number of edges = " << graph->m_Edges.size() << endl;
 	graph->Print();
+	cout << "Loaded Graph: NumberOfEdges = " << graph->m_Edges.size() << endl;
 	MaxBigraphSolver solver;
 	Graph * result = solver.FindMaxBigraph(*graph);
-	cout << "RESULT: NumberOfEdges = " << result->m_Edges.size() << endl;
+	cout << "RESULT Graph: NumberOfEdges = " << result->m_Edges.size() << endl;
+	result->Print();
 
-	for (int i = 0; i < graph->m_Edges.size(); i++)
+	for (unsigned i = 0; i < graph->m_Edges.size(); i++)
 	{
 		delete graph->m_Edges[i];
 	}
 
 	graph->m_Edges.clear();
 	delete graph;
+	result->m_Edges.clear();
+	delete result;
+
 	return 0;
 }

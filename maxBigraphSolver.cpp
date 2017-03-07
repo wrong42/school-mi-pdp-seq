@@ -10,7 +10,8 @@ MaxBigraphSolver::MaxBigraphSolver()
 
 MaxBigraphSolver::~MaxBigraphSolver()
 {
-	delete m_BestGraph;
+	//if (m_BestGraph->m_NumberOfNodes == 0)
+	//	delete m_BestGraph;
 }
 
 Graph * MaxBigraphSolver::FindMaxBigraph(Graph & graph)
@@ -21,11 +22,17 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & graph)
 		return &graph;
 	}
 
+	m_OriginalGraph = &graph;
+
 	for (unsigned i = 0; i < graph.m_Edges.size(); i++)
 	{
 		Graph * childGraph = new Graph(graph);
-		graph.RemoveEdge(i);
+		childGraph->RemoveEdge(i);
 		FindMaxBigraphInternal(*childGraph);
+		if (childGraph != m_BestGraph)
+		{
+			delete childGraph;
+		}
 	}	
 	
 	return m_BestGraph;
@@ -33,29 +40,29 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & graph)
 
 void MaxBigraphSolver::FindMaxBigraphInternal(Graph & graph)
 {
-	if (m_BestGraph->m_Edges.size() >= graph.m_Edges.size())
+	unsigned minimumNumberOfEdges = graph.m_NumberOfNodes - 1;
+	
+	while (graph.m_Edges.size() > minimumNumberOfEdges)
 	{
-		return;
-	}
-	else if (graph.m_Edges.size() == graph.m_NumberOfNodes - 1 || TryMakeBigraph(graph))
-	{
-		if (m_BestGraph->m_Edges.size() < graph.m_Edges.size())
+		if (m_BestGraph->m_Edges.size() >= graph.m_Edges.size())
 		{
-			delete m_BestGraph;
-			m_BestGraph = &graph;
 			return;
 		}
+		else if (TryMakeBigraph(graph))
+		{
+			if (m_BestGraph->m_Edges.size() < graph.m_Edges.size())
+			{
+				if (m_BestGraph != m_OriginalGraph)
+					delete m_BestGraph;
+				m_BestGraph = &graph;
+				return;
+			}
+
+			return;
+		}
+	
+		graph.RemoveOneEdge();
 	}
-	
-	for (unsigned i = 0; i < graph.m_Edges.size(); i++)
-	{
-		Graph * childGraph = new Graph(graph);
-		graph.RemoveEdge(i);
-		FindMaxBigraphInternal(*childGraph);
-	}	
-	
-	if (&graph != m_BestGraph)
-		delete &graph;
 }
 
 /***
