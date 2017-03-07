@@ -88,22 +88,11 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 
 bool MaxBigraphSolver::GraphHasBeenProcessed(const Graph & graph) const
 {
-	//cout << "MaxBigraphSolver::GraphHasBeenProcessed Start" << endl;
 	if (m_ProcessedGraphsByEdge.find(graph.m_MissingEdgesById) != m_ProcessedGraphsByEdge.end())
 	{
-	//	cout << "MaxBigraphSolver::GraphHasBeenProcessed End" << endl;
 		return true;
 	}
-	//cout << "MaxBigraphSolver::GraphHasBeenProcessed End" << endl;
-/*
-	for (unsigned i = 0; i < m_ProcessedGraphsByEdge.size(); i++)
-	{
-		if (graph.m_MissingEdgesById == *(m_ProcessedGraphsByEdge[i]))
-		{
-			return true;
-		}
-	}
-*/
+
 	return false;
 }
 
@@ -119,7 +108,6 @@ bool MaxBigraphSolver::TryMakeBigraph(Graph & graph) const
 
 	graph.m_NodeColors[0] = White;
 	nodesToColor.push(0);
-	std::pair<std::set<int>::iterator,bool> ret;
 
 	while(1)
 	{
@@ -148,9 +136,7 @@ bool MaxBigraphSolver::TryMakeBigraph(Graph & graph) const
 			}
 		}
 
-		//cout << "MaxBigraphSolver::TryMakeBigraph: INSERTING NODE " << nodeIndex << " to processedNodes" << endl;
-		ret = processedNodes.insert(nodeIndex);
-		//cout << "MaxBigraphSolver::TryMakeBigraph: ret.second = " << ret.second << endl;
+		processedNodes.insert(nodeIndex);
 	
 		if (nodesToColor.empty())
 		{
@@ -168,52 +154,5 @@ bool MaxBigraphSolver::TryMakeBigraph(Graph & graph) const
 		}
 	}
 
-	return true;
-}
-
-bool MaxBigraphSolver::TryColorNode(Graph & graph, int nodeIndex) const
-{
-	Color tmp = Undefined;
-	
-	//cout << "MaxBigraphSolver::TryColorNode: Coloring node: " << nodeIndex << endl;
-	for (int i = 0; i < graph.m_NumberOfNodes; i++)
-	{
-		if (graph.AreNeighbours(nodeIndex, i)) 						// The nodes are neighbours
-		{
-			//cout << "MaxBigraphSolver::TryColorNode: Found neighbour with index: " << i << " and color: " << graph.m_NodeColors[i] << endl;
-			if (graph.m_NodeColors[i] != Undefined)					// The neighbour is already colored
-			{
-				if (tmp == Undefined)								// No other previously visited neighbour has been colored 
-				{
-					//cout << "MaxBigraphSolver::TryColorNode: Setting neighbours color to: " << graph.m_NodeColors[i] << endl;
-					tmp = graph.m_NodeColors[i];
-				}
-				else												// There was another neighbour previously visited, that has been colored
-				{
-					if ( tmp != graph.m_NodeColors[i])				// If the previously visited neigbour does not have the same color as this neighbour, we can not color this node
-					{
-						return false;
-					}
-				}
-			}
-		}		
-	}
-
-	switch(tmp)
-	{
-		case Undefined:
-			//cout << "MaxBigraphSolver::TryColorNode: Undef: neighbours color is " << tmp << ", setting to: " << Black << endl;
-			graph.m_NodeColors[nodeIndex] = Black;
-			break;
-		case Black:
-			//cout << "MaxBigraphSolver::TryColorNode: Black: neighbours color is " << tmp << ", setting to: " << White << endl;
-			graph.m_NodeColors[nodeIndex] = White;
-			break;
-		case White:
-			//cout << "MaxBigraphSolver::TryColorNode: White: neighbours color is " << tmp << ", setting to: " << Black << endl;
-			graph.m_NodeColors[nodeIndex] = Black;
-	}
-
-	//cout << "Node "<< nodeIndex << " successfully colored with color: " << graph.m_NodeColors[nodeIndex] << endl;
 	return true;
 }

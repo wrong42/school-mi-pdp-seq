@@ -14,7 +14,6 @@ class MaxBigraphSolver
 		Graph * FindMaxBigraph(Graph &);
 	private:
 		bool TryMakeBigraph(Graph &) const;
-		bool TryColorNode(Graph &, int) const;
 		bool GraphHasBeenProcessed(const Graph &) const;
 	private:
 		Graph * m_BestGraph;
