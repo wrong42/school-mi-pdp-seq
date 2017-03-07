@@ -33,8 +33,8 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & graph)
 		{
 			delete childGraph;
 		}
-	}	
-	
+	}		
+
 	return m_BestGraph;
 }
 
