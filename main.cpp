@@ -6,6 +6,8 @@
 
 using namespace std;
 
+void DeleteGraphs(Graph * loadedGraph, Graph * resultGraph);
+
 int main(int args, char * argv[])
 {
 	cout << "Start of application. Number of arguments: " << args << endl;
@@ -13,28 +15,36 @@ int main(int args, char * argv[])
 	if (args < 2) return 1;
 
 	GraphLoader loader;
-
-	Graph * graph = loader.LoadGraph(argv[1]);
-	graph->Print();
-	cout << "Loaded Graph: NumberOfEdges = " << graph->m_Edges.size() << endl;
 	MaxBigraphSolver solver;
+
+	/* LOAD GRAPH FROM FILE */
+	Graph * graph = loader.LoadGraph(argv[1]);
+	cout << "Loaded Graph: NumberOfEdges = " << graph->m_Edges.size() << endl;
+	graph->Print();
+
+	/* GET MAX BIPARTHITE GRAPH */
 	Graph * result = solver.FindMaxBigraph(*graph);
 	cout << "RESULT Graph: NumberOfEdges = " << result->m_Edges.size() << endl;
 	result->Print();
 
-	for (unsigned i = 0; i < graph->m_Edges.size(); i++)
-	{
-		delete graph->m_Edges[i];
-	}
-
-	graph->m_Edges.clear();
-	delete graph;
-	
-	if (result != graph)
-	{
-		result->m_Edges.clear();
-		delete result;
-	}
+	/* DELETE SECTION */
+	DeleteGraphs(graph, result);
 
 	return 0;
+}
+
+void DeleteGraphs(Graph * loadedGraph, Graph * resultGraph)
+{
+	if (resultGraph != loadedGraph)
+	{
+		delete resultGraph;
+	}
+	
+	for (unsigned i = 0; i < loadedGraph->m_Edges.size(); i++)
+	{
+		delete loadedGraph->m_Edges[i];
+	}
+	
+	loadedGraph->m_Edges.clear();
+	delete loadedGraph;
 }

@@ -31,7 +31,7 @@ Graph * GraphLoader::LoadGraph(const char * file)
 void GraphLoader::LoadGraphInternal()
 {
 	string line;
-	int index = 0;
+	int index = 0, edgeId = 0;
 
 	for (int i = 0; i < m_NumberOfGraphNodes; i++)
 	{
@@ -42,8 +42,7 @@ void GraphLoader::LoadGraphInternal()
 			if (j > i)
 			{
 				//cout << "GraphLoader::LoadGraph: i=" << i << " j=" << j << " readValue=" << line[j] << endl;
-				Edge * e = new Edge(i, j);
-				InsertNewEdge(index, line[j], e);
+				InsertNewEdge(index, line[j], new Edge(edgeId++, i, j));
 			}
 		}
 
