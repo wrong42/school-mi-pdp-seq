@@ -119,6 +119,7 @@ bool MaxBigraphSolver::TryMakeBigraph(Graph & graph) const
 	queue<int> nodesToColor;
 	set<int> processedNodes;
 
+	/* Initialize queue with nodes to color. First node colored White */
 	graph.m_NodeColors[0] = White;
 	nodesToColor.push(0);
 
