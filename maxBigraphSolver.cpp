@@ -29,8 +29,8 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 
 		if (graph->m_Edges.size() > m_BestGraph->m_Edges.size())
 		{
-			cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_Edges.size();
-			cout << ", bestGraph:NumberOfEdges: " << m_BestGraph->m_Edges.size() << endl;
+			//cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_Edges.size();
+			//cout << ", bestGraph:NumberOfEdges: " << m_BestGraph->m_Edges.size() << endl;
 			if (TryMakeBigraph(*graph))
 			{
 				cout << "FOUND BETTER GRAPH: NumberOfEdges = " << graph->m_Edges.size() << endl;
