@@ -12,9 +12,6 @@ MaxBigraphSolver::MaxBigraphSolver()
 
 MaxBigraphSolver::~MaxBigraphSolver()
 {
-	//if (m_BestGraph->m_NumberOfNodes == 0)
-	//	delete m_BestGraph;
-
 	for (unsigned i = 0; i < m_MissingEdges.size(); i++)
 		delete m_MissingEdges[i];
 }
@@ -32,7 +29,7 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 		m_GraphStack.pop();
 
 
-		if (graph->m_Edges.size() > m_BestGraph->m_Edges.size())
+		if (PossiblyBetterGraph(*graph))
 		{
 			//cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_Edges.size();
 			//cout << ", bestGraph:NumberOfEdges: " << m_BestGraph->m_Edges.size() << endl;
@@ -84,6 +81,11 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 	}
 
 	return m_BestGraph;
+}
+
+bool MaxBigraphSolver::PossiblyBetterGraph(const Graph & graph) const
+{
+	return graph.m_Edges.size() > m_BestGraph->m_Edges.size();
 }
 
 bool MaxBigraphSolver::GraphHasBeenProcessed(const Graph & graph) const

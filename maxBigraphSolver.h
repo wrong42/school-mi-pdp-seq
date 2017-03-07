@@ -15,6 +15,7 @@ class MaxBigraphSolver
 	private:
 		bool TryMakeBigraph(Graph &) const;
 		bool GraphHasBeenProcessed(const Graph &) const;
+		bool PossiblyBetterGraph(const Graph &) const;
 	private:
 		Graph * m_BestGraph;
 		Graph * m_OriginalGraph;
