@@ -45,6 +45,17 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 					if (graph != &originalGraph)
 						delete graph;
 					continue;
+				}
+				else if (TryMakeBigraph(*graph))
+				{
+					cout << "FOUND BETTER GRAPH: NumberOfEdges = " << graph->m_Edges.size() << endl;
+					if (m_BestGraph != &originalGraph)
+						delete m_BestGraph;
+					m_BestGraph = graph;
+					set<int> * missingEdges = new set<int>(graph->m_MissingEdgesById);
+					m_MissingEdges.push_back(missingEdges);
+					m_ProcessedGraphsByEdge.insert(*missingEdges);
+					continue;
 				}	
 			}
 			else if (TryMakeBigraph(*graph))
