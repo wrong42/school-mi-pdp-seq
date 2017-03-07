@@ -27,7 +27,8 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 
 		if (graph->m_Edges.size() > m_BestGraph->m_Edges.size())
 		{
-			//cout << "GraphStack::POP: NumberOfGraphEdges: " << graph->m_Edges.size() << endl;
+			cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_Edges.size();
+			cout << ", bestGraph:NumberOfEdges: " << m_BestGraph->m_Edges.size() << endl;
 			if (TryMakeBigraph(*graph))
 			{
 				cout << "FOUND BETTER GRAPH: NumberOfEdges = " << graph->m_Edges.size() << endl;
@@ -43,6 +44,7 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 				{
 					Graph * childGraph = new Graph(*graph);
 					childGraph->RemoveEdge(i);
+					cout << "Adding graph to stack: NumberOfEdges: " << childGraph->m_Edges.size() << endl;
 					m_GraphStack.push(childGraph);
 				}
 			}
@@ -53,33 +55,6 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 	}
 
 	return m_BestGraph;
-}
-
-void MaxBigraphSolver::FindMaxBigraphInternal(Graph & graph)
-{
-	unsigned minimumNumberOfEdges = graph.m_NumberOfNodes - 1;
-	
-	while (graph.m_Edges.size() > minimumNumberOfEdges)
-	{
-		if (m_BestGraph->m_Edges.size() >= graph.m_Edges.size())
-		{
-			return;
-		}
-		else if (TryMakeBigraph(graph))
-		{
-			if (m_BestGraph->m_Edges.size() < graph.m_Edges.size())
-			{
-				if (m_BestGraph != m_OriginalGraph)
-					delete m_BestGraph;
-				m_BestGraph = &graph;
-				return;
-			}
-
-			return;
-		}
-	
-		graph.RemoveOneEdge();
-	}
 }
 
 /***
