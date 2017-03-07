@@ -15,7 +15,7 @@ Graph::Graph(int numberOfNodes)
 	memset((void*)m_NodeColors, Undefined, numberOfNodes * sizeof(Color));
 }
 
-Graph::Graph(const Graph & src) : m_Edges(src.m_Edges)
+Graph::Graph(const Graph & src) : m_Edges(src.m_Edges), m_MissingEdgesById(src.m_MissingEdgesById)
 {
 	m_NumberOfNodes = src.m_NumberOfNodes;
 	//m_Edges = src.m_Edges;
@@ -93,6 +93,7 @@ void Graph::RemoveEdge(unsigned index)
 		++it;
 	
 	m_Edges.erase(it);
+	m_MissingEdgesById.insert(index);
 }
 
 void Graph::Print() const

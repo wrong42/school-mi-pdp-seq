@@ -2,6 +2,7 @@
 #define __GRAPH_H__2222
 
 #include <vector>
+#include <set>
 #include "edge.h"
 #include "colors.h"
 
@@ -10,8 +11,9 @@ class Graph
 	public:
 		int m_NumberOfNodes;
 		bool * m_AdjMatrix;
-		std::vector<Edge*> m_Edges;
 		Color * m_NodeColors;
+		std::vector<Edge*> m_Edges;
+		std::set<int> m_MissingEdgesById;
 
 	public:
 		Graph(int numberOfNodes);
@@ -30,6 +32,7 @@ class Graph
 	
 	private:
 		int m_AdjMatrixSize;
+
 };
 
 #endif // __GRAPH_H__2222

@@ -14,11 +14,16 @@ MaxBigraphSolver::~MaxBigraphSolver()
 {
 	//if (m_BestGraph->m_NumberOfNodes == 0)
 	//	delete m_BestGraph;
+
+	for (unsigned i = 0; i < m_MissingEdges.size(); i++)
+		delete m_MissingEdges[i];
 }
 
 Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 {
 	m_GraphStack.push(&originalGraph);
+
+	unsigned maximumNumberOfEdges = originalGraph.m_NumberOfNodes * originalGraph.m_NumberOfNodes / 4;
 
 	while(!m_GraphStack.empty())
 	{
@@ -29,9 +34,23 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 
 		if (graph->m_Edges.size() > m_BestGraph->m_Edges.size())
 		{
-			cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_Edges.size();
-			cout << ", bestGraph:NumberOfEdges: " << m_BestGraph->m_Edges.size() << endl;
-			if (TryMakeBigraph(*graph))
+			//cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_Edges.size();
+			//cout << ", bestGraph:NumberOfEdges: " << m_BestGraph->m_Edges.size() << endl;
+			
+			if (graph->m_Edges.size() > maximumNumberOfEdges)
+			{
+
+			}
+			else if (graph->m_MissingEdgesById.size() < 4)
+			{
+				if (GraphHasBeenProcessed(*graph))
+				{
+					if (graph != &originalGraph)
+						delete graph;
+					continue;
+				}	
+			}
+			else if (TryMakeBigraph(*graph))
 			{
 				cout << "FOUND BETTER GRAPH: NumberOfEdges = " << graph->m_Edges.size() << endl;
 				if (m_BestGraph != &originalGraph)
@@ -52,11 +71,40 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 			}
 		}
 
+		if (graph->m_MissingEdgesById.size() < 4)
+		{
+			set<int> * missingEdges = new set<int>(graph->m_MissingEdgesById);
+			m_MissingEdges.push_back(missingEdges);
+			m_ProcessedGraphsByEdge.insert(*missingEdges);
+		}
+
 		if (graph != &originalGraph)
 			delete graph;
+
 	}
 
 	return m_BestGraph;
+}
+
+bool MaxBigraphSolver::GraphHasBeenProcessed(const Graph & graph) const
+{
+	//cout << "MaxBigraphSolver::GraphHasBeenProcessed Start" << endl;
+	if (m_ProcessedGraphsByEdge.find(graph.m_MissingEdgesById) != m_ProcessedGraphsByEdge.end())
+	{
+	//	cout << "MaxBigraphSolver::GraphHasBeenProcessed End" << endl;
+		return true;
+	}
+	//cout << "MaxBigraphSolver::GraphHasBeenProcessed End" << endl;
+/*
+	for (unsigned i = 0; i < m_ProcessedGraphsByEdge.size(); i++)
+	{
+		if (graph.m_MissingEdgesById == *(m_ProcessedGraphsByEdge[i]))
+		{
+			return true;
+		}
+	}
+*/
+	return false;
 }
 
 /***
