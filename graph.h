@@ -20,9 +20,11 @@ class Graph
 
 		void RemoveOneEdge();
 		void RemoveEdge(unsigned);
-		bool AreNeighbours(int, int) const; 		
 		int GetEdgeIndex(int, int) const;
+		bool AreNeighbours(int, int) const; 		
 		void Print() const;
+		bool ColorNeighbourNodes(int, Color);
+		int GetFirstUncoloredNode() const;
 	private:
 		int GetSizeOfAdjMatrix() const;
 	

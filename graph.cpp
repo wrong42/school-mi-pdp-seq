@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstring>
+#include <queue>
 #include "graph.h"
 
 using namespace std;
@@ -116,4 +117,39 @@ void Graph::Print() const
 	}
 
 	cout << endl;
+}
+
+int Graph::GetFirstUncoloredNode() const
+{
+	for (int i = 0; i < m_NumberOfNodes; i++)
+	{
+		if (m_NodeColors[i] == Undefined)
+		{
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+bool Graph::ColorNeighbourNodes(int nodeIndex, Color color)
+{
+	for (int i = 0; i < m_NumberOfNodes; i++)
+	{
+		if (AreNeighbours(nodeIndex, i))
+		{
+			if (m_NodeColors[i] != Undefined && m_NodeColors[i] != color)
+			{
+				//cout << "Graph::ColorNeighbourNodes: Unable to color node " << i << ". Node is already colored: " << m_NodeColors[i] << endl;
+				return false;
+			}
+			else
+			{
+				//cout << "Graph::ColorNeighbourNodes: Coloring node " << i << " to color " << color << endl;
+				m_NodeColors[i] = color;
+			}
+		}
+	}
+
+	return true;
 }

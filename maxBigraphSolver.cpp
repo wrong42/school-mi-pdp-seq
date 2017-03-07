@@ -1,4 +1,6 @@
 #include <iostream>
+#include <queue>
+#include <set>
 #include "maxBigraphSolver.h"
 
 using namespace std;
@@ -44,7 +46,7 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 				{
 					Graph * childGraph = new Graph(*graph);
 					childGraph->RemoveEdge(i);
-					cout << "Adding graph to stack: NumberOfEdges: " << childGraph->m_Edges.size() << endl;
+					//cout << "Adding graph to stack: NumberOfEdges: " << childGraph->m_Edges.size() << endl;
 					m_GraphStack.push(childGraph);
 				}
 			}
@@ -64,21 +66,57 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 ***/
 bool MaxBigraphSolver::TryMakeBigraph(Graph & graph) const
 {
-	//cout << "MaxBigraphSolver.TryMakeBigraph: coloring " << graph.m_NumberOfNodes << " nodes" << endl;
-	unsigned minimumNumberOfEdges = graph.m_NumberOfNodes - 1;
-	if (graph.m_Edges.size() <= minimumNumberOfEdges)
-	{
-		return true;
-	}
+	queue<int> nodesToColor;
+	set<int> processedNodes;
 
-	for (int i = 0; i < graph.m_NumberOfNodes; i++)
+	graph.m_NodeColors[0] = White;
+	nodesToColor.push(0);
+	std::pair<std::set<int>::iterator,bool> ret;
+
+	while(1)
 	{
-		if (graph.m_NodeColors[i] == Undefined)
+		//cout << "MaxBigraphSolver::TryMakeBigraph: size of processedNodes = " << processedNodes.size() << endl;
+		int nodeIndex = nodesToColor.front();
+		nodesToColor.pop();
+		Color neighbourColor = graph.m_NodeColors[nodeIndex] == Black ? White : Black;
+		
+		//cout << "MaxBigraphSolver::TryMakeBigraph: Colorring neighbours of node " << nodeIndex << " (" << graph.m_NodeColors[nodeIndex] << ")";
+		//cout << " to color: " << neighbourColor << endl; 
+		if (!graph.ColorNeighbourNodes(nodeIndex, neighbourColor))
 		{
-			if (!TryColorNode(graph, i))
+			//cout << "MaxBigraphSolver::TryMakeBigraph: UNABLE TO COLOR GRAPH" << endl;
+			return false;
+		}
+
+		for (int i = 0; i < graph.m_NumberOfNodes; i++)
+		{
+			if (graph.AreNeighbours(nodeIndex, i))
 			{
-				return false;
-			}	
+				if (processedNodes.find(i) == processedNodes.end())
+				{
+					//cout << "MaxBigraphSolver::TryMakeBigraph: Pushing not processed node: " << i << " to nodeToColor queue" << endl;
+					nodesToColor.push(i);
+				}
+			}
+		}
+
+		//cout << "MaxBigraphSolver::TryMakeBigraph: INSERTING NODE " << nodeIndex << " to processedNodes" << endl;
+		ret = processedNodes.insert(nodeIndex);
+		//cout << "MaxBigraphSolver::TryMakeBigraph: ret.second = " << ret.second << endl;
+	
+		if (nodesToColor.empty())
+		{
+			int notColoredNode = graph.GetFirstUncoloredNode(); 
+			//cout << "MaxBigraphSolver::TryMakeBigraph: Nodes to color queue is empty. Index of first not yet colored node: " << notColoredNode << endl;
+			if (notColoredNode < 0)
+			{
+				break;
+			}
+			else
+			{
+				graph.m_NodeColors[notColoredNode] = White;
+				nodesToColor.push(notColoredNode);
+			}
 		}
 	}
 

@@ -29,8 +29,12 @@ int main(int args, char * argv[])
 
 	graph->m_Edges.clear();
 	delete graph;
-	result->m_Edges.clear();
-	delete result;
+	
+	if (result != graph)
+	{
+		result->m_Edges.clear();
+		delete result;
+	}
 
 	return 0;
 }
