@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstring>
 #include <queue>
+#include <list>
 #include "graph.h"
 
 using namespace std;
@@ -15,7 +16,7 @@ Graph::Graph(int numberOfNodes)
 	memset((void*)m_NodeColors, Undefined, numberOfNodes * sizeof(Color));
 }
 
-Graph::Graph(const Graph & src) : m_Edges(src.m_Edges), m_MissingEdgesById(src.m_MissingEdgesById)
+Graph::Graph(const Graph & src) : m_Edges(src.m_Edges), m_MissingEdgesById(src.m_MissingEdgesById), m_EdgeMappings(src.m_EdgeMappings)
 {
 	m_NumberOfNodes = src.m_NumberOfNodes;
 	//m_Edges = src.m_Edges;
@@ -48,9 +49,13 @@ bool Graph::AreNeighbours(int node1, int node2) const
 		return false;
 	}
 
-	int edgeIndex = GetEdgeIndex(node1, node2);
+	//int edgeIndex = GetEdgeIndex(node1, node2);
 	//cout << "Graph::AreNeighbours: AreNeighbours=" << m_AdjMatrix[edgeIndex] << endl;
-	return m_AdjMatrix[edgeIndex];
+	map<pair<int,int>, int>::const_iterator pos = m_EdgeMappings.find(pair<int,int>(node1, node2));
+	if (pos == m_EdgeMappings.end())
+		return false;
+
+	return m_AdjMatrix[pos->second];
 }
 
 int Graph::GetEdgeIndex(int node1, int node2) const
@@ -70,15 +75,6 @@ int Graph::GetEdgeIndex(int node1, int node2) const
 
 	//cout << "Graph::GetEdgeIndex: Edge index = " << edgeIndex << endl;
 	return edgeIndex;
-}
-
-void Graph::RemoveOneEdge()
-{
-	//cout << "Graph::RemoveOneEdge: Removing one edge" << endl;
-	Edge * edge = m_Edges.back();
-	int edgeIndex = GetEdgeIndex(edge->Node1, edge->Node2);
-	m_AdjMatrix[edgeIndex] = false;
-	m_Edges.pop_back();
 }
 
 void Graph::RemoveEdge(unsigned index)
@@ -133,8 +129,9 @@ int Graph::GetFirstUncoloredNode() const
 	return -1;
 }
 
-bool Graph::ColorNeighbourNodes(int nodeIndex, Color color)
+vector<int> Graph::ColorNeighbourNodes(int nodeIndex, Color color)
 {
+	vector<int> neighbours;
 	for (int i = 0; i < m_NumberOfNodes; i++)
 	{
 		if (AreNeighbours(nodeIndex, i))
@@ -142,15 +139,18 @@ bool Graph::ColorNeighbourNodes(int nodeIndex, Color color)
 			if (m_NodeColors[i] != Undefined && m_NodeColors[i] != color)
 			{
 				//cout << "Graph::ColorNeighbourNodes: Unable to color node " << i << ". Node is already colored: " << m_NodeColors[i] << endl;
-				return false;
+				vector<int> empty;
+				return empty;
 			}
 			else
 			{
 				//cout << "Graph::ColorNeighbourNodes: Coloring node " << i << " to color " << color << endl;
 				m_NodeColors[i] = color;
+				neighbours.push_back(i);
 			}
 		}
 	}
 
-	return true;
+	//cout << "GRAPH::Color neighbours - count = " << neighbours.size() << endl;
+	return neighbours;
 }

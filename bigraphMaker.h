@@ -3,6 +3,7 @@
 
 #include <set>
 #include <queue>
+#include <vector>
 #include "graph.h"
 
 class BigraphMaker
@@ -15,7 +16,7 @@ class BigraphMaker
 		bool ColorNodes();
 		int GetNextColoredNode();
 		void AddNodeToProcessedNodes(int);
-		void AddNodeNeighboursToQueue(int);
+		void AddNodeNeighboursToQueue(std::vector<int> &);
 		void AddNotColoredNodeIfAny();
 		Color GetNeighbourColor(int) const;
 	private:

@@ -28,14 +28,15 @@ bool BigraphMaker::ColorNodes()
 		
 		//cout << "BigraphMaker::ColorNodes: Colorring neighbours of node " << nodeIndex << " (" << m_Graph->m_NodeColors[nodeIndex] << ")";
 		//cout << " to color: " << neighbourColor << endl; 
-		if (!m_Graph->ColorNeighbourNodes(nodeIndex, neighbourColor))
+		vector<int> neighbours = m_Graph->ColorNeighbourNodes(nodeIndex, neighbourColor);
+		if (neighbours.size() == 0)
 		{
 			//cout << "BigraphMaker::ColorNodes: UNABLE TO COLOR GRAPH" << endl;
 			return false;
 		}
 
 		AddNodeToProcessedNodes(nodeIndex);
-		AddNodeNeighboursToQueue(nodeIndex);
+		AddNodeNeighboursToQueue(neighbours);
 		AddNotColoredNodeIfAny();
 
 		if (m_ColoredNodes.empty())
@@ -59,18 +60,15 @@ Color BigraphMaker::GetNeighbourColor(int nodeIndex) const
 	return m_Graph->m_NodeColors[nodeIndex] == Black ? White : Black;
 }
 
-void BigraphMaker::AddNodeNeighboursToQueue(int nodeIndex)
+void BigraphMaker::AddNodeNeighboursToQueue(vector<int> & neighbours)
 {
-	for (int i = 0; i < m_Graph->m_NumberOfNodes; i++)
+	for (unsigned i = 0; i < neighbours.size(); i++)
 	{
-		if (m_Graph->AreNeighbours(nodeIndex, i))
+		if (m_ProcessedNodes.find(neighbours[i]) == m_ProcessedNodes.end())
 		{
-			if (m_ProcessedNodes.find(i) == m_ProcessedNodes.end())
-			{
-				//cout << "BigraphMaker::ColorNodes: Pushing not processed node: " << i << " to nodeToColor queue" << endl;
-				m_ColoredNodes.push(i);
-			}
-		}
+			//cout << "BigraphMaker::ColorNodes: Pushing not processed node: " << i << " to nodeToColor queue" << endl;
+			m_ColoredNodes.push(neighbours[i]);
+		}		
 	}
 }
 

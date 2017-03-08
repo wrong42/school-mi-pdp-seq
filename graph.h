@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <set>
+#include <map>
 #include "edge.h"
 #include "colors.h"
 
@@ -14,22 +15,21 @@ class Graph
 		Color * m_NodeColors;
 		std::vector<Edge*> m_Edges;
 		std::set<int> m_MissingEdgesById;
+		std::map<std::pair<int,int>, int> m_EdgeMappings;
 
 	public:
 		Graph(int numberOfNodes);
 		Graph(const Graph &);
 	  ~Graph();
 
-		void RemoveOneEdge();
 		void RemoveEdge(unsigned);
 		int GetEdgeIndex(int, int) const;
 		bool AreNeighbours(int, int) const; 		
 		void Print() const;
-		bool ColorNeighbourNodes(int, Color);
+		std::vector<int> ColorNeighbourNodes(int, Color);
 		int GetFirstUncoloredNode() const;
 	private:
-		int GetSizeOfAdjMatrix() const;
-	
+		int GetSizeOfAdjMatrix() const;	
 	private:
 		int m_AdjMatrixSize;
 

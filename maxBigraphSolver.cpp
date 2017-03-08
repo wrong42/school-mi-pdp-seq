@@ -1,6 +1,7 @@
 #include <iostream>
 #include <queue>
 #include <set>
+#include <omp.h>
 #include "maxBigraphSolver.h"
 
 using namespace std;
@@ -20,7 +21,7 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 {
 	m_OriginalGraph = &originalGraph;
 	m_GraphStack.push(&originalGraph);
-	
+	//omp_set_num_threads(4);
 
 	while(!m_GraphStack.empty())
 	{
@@ -28,15 +29,19 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 		Graph * graph = m_GraphStack.top();
 		m_GraphStack.pop();
 
-
 		if (PossiblyBetterGraph(*graph))
 		{
 			TryPossiblyBetterGraph(graph);
+/*			#pragma omp parallel
+			{
+				#pragma omp task
+				TryPossiblyBetterGraph(*graph);	
+				#pragma omp taskwait
+			}*/
 		}
 
 		if (graph != m_OriginalGraph && graph != m_BestGraph)
 			delete graph;
-
 	}
 
 	return m_BestGraph;

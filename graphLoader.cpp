@@ -42,7 +42,8 @@ void GraphLoader::LoadGraphInternal()
 			if (j > i)
 			{
 				//cout << "GraphLoader::LoadGraph: i=" << i << " j=" << j << " readValue=" << line[j] << endl;
-				InsertNewEdge(index, line[j], new Edge(edgeId++, i, j));
+				InsertNewEdge(index, line[j], new Edge(edgeId, i, j));
+				m_Graph->m_EdgeMappings.insert(make_pair(pair<int,int> (i,j), edgeId++));
 			}
 		}
 
