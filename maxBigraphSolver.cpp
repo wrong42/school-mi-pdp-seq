@@ -48,12 +48,16 @@ void MaxBigraphSolver::TryPossiblyBetterGraph(Graph * graph)
 	//cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_Edges.size();
 	//cout << ", bestGraph:NumberOfEdges: " << m_BestGraph->m_Edges.size() << endl;
 	
+	if (graph->m_Edges.size() < graph->m_NumberOfNodes - 1)
+	{
+		return;
+	}/*
 	if (graph->m_Edges.size() > maximumNumberOfEdges)
 	{
 		AddChildGraphsToStack(graph);
 		AddProcessedGraph(graph);
 		return;
-	}
+	}*/
 
 	if (GraphHasBeenProcessed(*graph))
 	{
@@ -63,6 +67,11 @@ void MaxBigraphSolver::TryPossiblyBetterGraph(Graph * graph)
 	if (TryMakeBigraph(*graph))
 	{
 		AcceptBetterGraph(graph);
+		return;
+	}
+	else if (m_BigraphMaker.m_ColoredNodes.size() == 0 && m_BigraphMaker.m_ProcessedNodes.size() < graph->m_NumberOfNodes)
+	{
+		return;
 	}
 
 	AddProcessedGraph(graph);

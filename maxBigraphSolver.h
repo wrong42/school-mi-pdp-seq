@@ -31,7 +31,7 @@ class MaxBigraphSolver
 		std::set<std::set<int> > m_ProcessedGraphsByEdge;
 		std::vector<std::set<int> *> m_MissingEdges;
 
-		static const int MaximumNumberOfMissingEdges = 4;
+		static const int MaximumNumberOfMissingEdges = 6;
 };
 
 #endif // __MAX_BIGRAPH_SOLVER_H__
