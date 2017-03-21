@@ -44,7 +44,7 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 
 void MaxBigraphSolver::TryPossiblyBetterGraph(Graph * graph)
 {
-	unsigned maximumNumberOfEdges = m_OriginalGraph->m_NumberOfNodes * m_OriginalGraph->m_NumberOfNodes / 4;
+	//unsigned maximumNumberOfEdges = m_OriginalGraph->m_NumberOfNodes * m_OriginalGraph->m_NumberOfNodes / 4;
 	//cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_Edges.size();
 	//cout << ", bestGraph:NumberOfEdges: " << m_BestGraph->m_Edges.size() << endl;
 	
