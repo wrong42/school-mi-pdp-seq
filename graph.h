@@ -10,10 +10,17 @@ class Graph
 {
 	public:
 		int m_NumberOfNodes;
+		int m_NumberOfEdgesOriginal;
+		int m_NumberOfEdgesCurrent;
+		int m_LastErasedEdge;
+
 		bool * m_AdjMatrix;
+		bool * m_EdgeMatrix;
 		Color * m_NodeColors;
-		std::vector<Edge*> m_Edges;
+
 		std::set<int> m_MissingEdgesById;
+		//std::vector<Edge*> m_Edges; //OLD
+		Edge ** m_Edges; // NEW - shared for all graphs
 
 	public:
 		Graph(int numberOfNodes);

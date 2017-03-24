@@ -15,15 +15,18 @@ Graph::Graph(int numberOfNodes)
 	memset((void*)m_NodeColors, Undefined, numberOfNodes * sizeof(Color));
 }
 
-Graph::Graph(const Graph & src) : m_Edges(src.m_Edges), m_MissingEdgesById(src.m_MissingEdgesById)
+Graph::Graph(const Graph & src) : m_MissingEdgesById(src.m_MissingEdgesById)
 {
 	m_NumberOfNodes = src.m_NumberOfNodes;
-	//m_Edges = src.m_Edges;
+	m_NumberOfEdgesOriginal = src.m_NumberOfEdgesOriginal;
 	m_AdjMatrixSize = src.m_AdjMatrixSize;
+
 	m_AdjMatrix = new bool[m_AdjMatrixSize];
+	m_EdgeMatrix = new bool[m_NumberOfEdgesOriginal];
 	m_NodeColors = new Color[m_NumberOfNodes];
 	
 	memcpy((void*)m_AdjMatrix, src.m_AdjMatrix, m_AdjMatrixSize * sizeof(bool));
+	memcpy((void*)m_EdgeMatrix, src.m_EdgeMatrix, m_NumberOfEdgesOriginal * sizeof(bool));
 	memset((void*)m_NodeColors, Undefined, m_NumberOfNodes * sizeof(Color));
 }
 
@@ -74,25 +77,20 @@ int Graph::GetEdgeIndex(int node1, int node2) const
 
 void Graph::RemoveOneEdge()
 {
-	//cout << "Graph::RemoveOneEdge: Removing one edge" << endl;
+	/*//cout << "Graph::RemoveOneEdge: Removing one edge" << endl;
 	Edge * edge = m_Edges.back();
 	int edgeIndex = GetEdgeIndex(edge->Node1, edge->Node2);
 	m_AdjMatrix[edgeIndex] = false;
-	m_Edges.pop_back();
+	m_Edges.pop_back();*/
 }
 
 void Graph::RemoveEdge(unsigned index)
 {
 	//cout << "Graph::RemoveEdge: Removing edge with index " << index << endl;
-	Edge * edge = m_Edges.at(index);
+	Edge * edge = m_Edges[index];
 	int edgeIndex = GetEdgeIndex(edge->Node1, edge->Node2);
 	m_AdjMatrix[edgeIndex] = false;
-	
-	vector<Edge*>::iterator it = m_Edges.begin();
-	for (unsigned i = 0; i < index; i++)
-		++it;
-	
-	m_Edges.erase(it);
+	m_EdgeMatrix[edgeIndex] = false;
 	m_MissingEdgesById.insert(index);
 }
 

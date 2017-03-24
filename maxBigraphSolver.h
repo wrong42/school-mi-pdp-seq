@@ -24,14 +24,8 @@ class MaxBigraphSolver
 	private:
 		Graph * m_BestGraph;
 		Graph * m_OriginalGraph;
-
 		BigraphMaker m_BigraphMaker;
-
 		std::stack<Graph*> m_GraphStack;
-		std::set<std::set<int> > m_ProcessedGraphsByEdge;
-		std::vector<std::set<int> *> m_MissingEdges;
-
-		static const int MaximumNumberOfMissingEdges = 6;
 };
 
 #endif // __MAX_BIGRAPH_SOLVER_H__

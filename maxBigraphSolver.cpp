@@ -12,8 +12,6 @@ MaxBigraphSolver::MaxBigraphSolver() : m_BigraphMaker()
 
 MaxBigraphSolver::~MaxBigraphSolver()
 {
-	for (unsigned i = 0; i < m_MissingEdges.size(); i++)
-		delete m_MissingEdges[i];
 }
 
 Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
@@ -48,18 +46,7 @@ void MaxBigraphSolver::TryPossiblyBetterGraph(Graph * graph)
 	//cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_Edges.size();
 	//cout << ", bestGraph:NumberOfEdges: " << m_BestGraph->m_Edges.size() << endl;
 	
-	if (graph->m_Edges.size() < graph->m_NumberOfNodes - 1)
-	{
-		return;
-	}/*
-	if (graph->m_Edges.size() > maximumNumberOfEdges)
-	{
-		AddChildGraphsToStack(graph);
-		AddProcessedGraph(graph);
-		return;
-	}*/
-
-	if (GraphHasBeenProcessed(*graph))
+	if (graph->m_NumberOfEdgesCurrent < graph->m_NumberOfNodes - 1)
 	{
 		return;
 	}
@@ -74,33 +61,23 @@ void MaxBigraphSolver::TryPossiblyBetterGraph(Graph * graph)
 		return;
 	}
 
-	AddProcessedGraph(graph);
 	AddChildGraphsToStack(graph);
 }
+
 void MaxBigraphSolver::AcceptBetterGraph(Graph * graph)
 {
-	cout << "FOUND BETTER GRAPH: NumberOfEdges = " << graph->m_Edges.size() << endl;
+	cout << "FOUND BETTER GRAPH: NumberOfEdges = " << graph->m_NumberOfEdgesCurrent << endl;
 
 	if (m_BestGraph != m_OriginalGraph)
 		delete m_BestGraph;
 	m_BestGraph = graph;
 }
 
-void MaxBigraphSolver::AddProcessedGraph(Graph * graph)
-{
-	if (graph->m_MissingEdgesById.size() < MaximumNumberOfMissingEdges)
-	{
-		set<int> * missingEdges = new set<int>(graph->m_MissingEdgesById);
-		m_MissingEdges.push_back(missingEdges);
-		m_ProcessedGraphsByEdge.insert(*missingEdges);
-	}
-}
-
 void MaxBigraphSolver::AddChildGraphsToStack(Graph * graph)
 {
-	if (graph->m_Edges.size() - 1 > m_BestGraph->m_Edges.size())
+	if (graph->m_NumberOfEdgesCurrent - 1 > m_BestGraph->m_NumberOfEdgesCurrent)
 	{
-		for (unsigned i = 0; i < graph->m_Edges.size(); i++)
+		for (unsigned i = 0; i < graph->m_NumberOfEdgesCurrent; i++)
 		{
 			Graph * childGraph = new Graph(*graph);
 			childGraph->RemoveEdge(i);
@@ -112,15 +89,7 @@ void MaxBigraphSolver::AddChildGraphsToStack(Graph * graph)
 
 bool MaxBigraphSolver::PossiblyBetterGraph(const Graph & graph) const
 {
-	return graph.m_Edges.size() > m_BestGraph->m_Edges.size();
-}
-
-bool MaxBigraphSolver::GraphHasBeenProcessed(const Graph & graph) const
-{
-	if (graph.m_MissingEdgesById.size() > MaximumNumberOfMissingEdges)
-		return false;
-
-	return m_ProcessedGraphsByEdge.find(graph.m_MissingEdgesById) != m_ProcessedGraphsByEdge.end();
+	return graph.m_NumberOfEdgesCurrent > m_BestGraph->m_NumberOfEdgesCurrent;
 }
 
 /***
