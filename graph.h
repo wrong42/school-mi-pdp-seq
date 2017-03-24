@@ -17,17 +17,17 @@ class Graph
 		bool * m_AdjMatrix;
 		bool * m_EdgeMatrix;
 		Color * m_NodeColors;
-
-		std::set<int> m_MissingEdgesById;
-		//std::vector<Edge*> m_Edges; //OLD
 		Edge ** m_Edges; // NEW - shared for all graphs
+
+		//std::set<int> m_MissingEdgesById;
+		//std::vector<Edge*> m_Edges; //OLD
 
 	public:
 		Graph(int numberOfNodes);
 		Graph(const Graph &);
 	  ~Graph();
 
-		void RemoveOneEdge();
+		void RemoveNextEdge();
 		void RemoveEdge(unsigned);
 		int GetEdgeIndex(int, int) const;
 		bool AreNeighbours(int, int) const; 		

@@ -8,6 +8,7 @@ using namespace std;
 Graph::Graph(int numberOfNodes)
 {
 	m_NumberOfNodes = numberOfNodes;
+	m_LastErasedEdge = 0;
 	m_AdjMatrixSize = GetSizeOfAdjMatrix();
 	m_AdjMatrix = new bool[m_AdjMatrixSize];
 	m_NodeColors = new Color[numberOfNodes];
@@ -15,11 +16,13 @@ Graph::Graph(int numberOfNodes)
 	memset((void*)m_NodeColors, Undefined, numberOfNodes * sizeof(Color));
 }
 
-Graph::Graph(const Graph & src) : m_MissingEdgesById(src.m_MissingEdgesById)
+Graph::Graph(const Graph & src)
 {
 	m_NumberOfNodes = src.m_NumberOfNodes;
 	m_NumberOfEdgesOriginal = src.m_NumberOfEdgesOriginal;
+	m_NumberOfEdgesCurrent = src.m_NumberOfEdgesCurrent;
 	m_AdjMatrixSize = src.m_AdjMatrixSize;
+	m_Edges = src.m_Edges;
 
 	m_AdjMatrix = new bool[m_AdjMatrixSize];
 	m_EdgeMatrix = new bool[m_NumberOfEdgesOriginal];
@@ -33,6 +36,7 @@ Graph::Graph(const Graph & src) : m_MissingEdgesById(src.m_MissingEdgesById)
 Graph::~Graph()
 {
 	delete[] m_AdjMatrix;
+	delete[] m_EdgeMatrix;
 	delete[] m_NodeColors;
 }
 
@@ -75,23 +79,26 @@ int Graph::GetEdgeIndex(int node1, int node2) const
 	return edgeIndex;
 }
 
-void Graph::RemoveOneEdge()
+void Graph::RemoveNextEdge()
 {
-	/*//cout << "Graph::RemoveOneEdge: Removing one edge" << endl;
-	Edge * edge = m_Edges.back();
-	int edgeIndex = GetEdgeIndex(edge->Node1, edge->Node2);
-	m_AdjMatrix[edgeIndex] = false;
-	m_Edges.pop_back();*/
+	m_EdgeMatrix[m_LastErasedEdge] = false;
+	Edge * e = m_Edges[m_LastErasedEdge];
+	int adjMatrixIndex = GetEdgeIndex(e->Node1, e->Node2);
+	m_AdjMatrix[adjMatrixIndex];
+
+	++m_LastErasedEdge;
+	--m_NumberOfEdgesCurrent;
 }
 
 void Graph::RemoveEdge(unsigned index)
 {
-	//cout << "Graph::RemoveEdge: Removing edge with index " << index << endl;
-	Edge * edge = m_Edges[index];
-	int edgeIndex = GetEdgeIndex(edge->Node1, edge->Node2);
-	m_AdjMatrix[edgeIndex] = false;
-	m_EdgeMatrix[edgeIndex] = false;
-	m_MissingEdgesById.insert(index);
+	m_EdgeMatrix[index] = false;
+	Edge * e = m_Edges[index];
+	int adjMatrixIndex = GetEdgeIndex(e->Node1, e->Node2);
+	m_AdjMatrix[adjMatrixIndex];
+
+	m_LastErasedEdge = index;
+	--m_NumberOfEdgesCurrent;
 }
 
 void Graph::Print() const

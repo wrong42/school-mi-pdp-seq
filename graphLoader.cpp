@@ -63,6 +63,7 @@ void GraphLoader::LoadGraphInternal()
 	memset((void*)edgeMatrix, 1, edgeCounter * sizeof(bool));
 	m_Graph->m_EdgeMatrix = edgeMatrix;
 	m_Graph->m_NumberOfEdgesOriginal = edgeCounter;
+	m_Graph->m_NumberOfEdgesCurrent = edgeCounter;
 
 
 	Edge ** edges = new Edge*[edgeCounter];

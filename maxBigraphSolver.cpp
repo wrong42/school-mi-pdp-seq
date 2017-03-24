@@ -1,13 +1,13 @@
 #include <iostream>
 #include <queue>
 #include <set>
+#include <cstring>
 #include "maxBigraphSolver.h"
 
 using namespace std;
 
 MaxBigraphSolver::MaxBigraphSolver() : m_BigraphMaker()
 {
-	m_BestGraph = new Graph(0);
 }
 
 MaxBigraphSolver::~MaxBigraphSolver()
@@ -16,16 +16,38 @@ MaxBigraphSolver::~MaxBigraphSolver()
 
 Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 {
-	m_OriginalGraph = &originalGraph;
-	m_GraphStack.push(&originalGraph);
-	
+	m_BestGraph = new Graph(0);
+	m_BestGraph->m_Edges = originalGraph.m_Edges;
+	m_BestGraph->m_NumberOfEdgesOriginal = originalGraph.m_NumberOfEdgesOriginal;
+	m_BestGraph->m_NumberOfEdgesCurrent = 0;
+	m_BestGraph->m_EdgeMatrix = new bool[originalGraph.m_NumberOfEdgesOriginal];
+	memset((void*)m_BestGraph->m_EdgeMatrix, 0, originalGraph.m_NumberOfEdgesOriginal * sizeof(bool));
 
+	cout << "Finding max bigraph" << endl;
+
+	if (TryMakeBigraph(originalGraph))
+	{
+		cout << "ORIGINAL GRAPH IS RESULT" << endl;
+		return &originalGraph;
+	}
+
+//	m_GraphStack.push(&originalGraph);
+
+	m_OriginalGraph = &originalGraph;
+	
+	for (int i = 0; i < originalGraph.m_NumberOfEdgesOriginal; i++)
+	{
+		Graph * graph = new Graph(originalGraph);
+		graph->RemoveEdge(i);
+		m_GraphStack.push(graph);
+	}
+
+	cout << "Graphs in stack: " << m_GraphStack.size() << endl;
 	while(!m_GraphStack.empty())
 	{
 		//cout << "Stack is not empty: Number of elements = " << m_GraphStack.size() << endl;
 		Graph * graph = m_GraphStack.top();
 		m_GraphStack.pop();
-
 
 		if (PossiblyBetterGraph(*graph))
 		{
@@ -34,7 +56,6 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 
 		if (graph != m_OriginalGraph && graph != m_BestGraph)
 			delete graph;
-
 	}
 
 	return m_BestGraph;
@@ -43,7 +64,7 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 void MaxBigraphSolver::TryPossiblyBetterGraph(Graph * graph)
 {
 	//unsigned maximumNumberOfEdges = m_OriginalGraph->m_NumberOfNodes * m_OriginalGraph->m_NumberOfNodes / 4;
-	//cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_Edges.size();
+	cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_NumberOfEdgesCurrent << endl;
 	//cout << ", bestGraph:NumberOfEdges: " << m_BestGraph->m_Edges.size() << endl;
 	
 	if (graph->m_NumberOfEdgesCurrent < graph->m_NumberOfNodes - 1)
@@ -77,7 +98,7 @@ void MaxBigraphSolver::AddChildGraphsToStack(Graph * graph)
 {
 	if (graph->m_NumberOfEdgesCurrent - 1 > m_BestGraph->m_NumberOfEdgesCurrent)
 	{
-		for (unsigned i = 0; i < graph->m_NumberOfEdgesCurrent; i++)
+		for (unsigned i = graph->m_LastErasedEdge + 1; i < graph->m_NumberOfEdgesOriginal; i++)
 		{
 			Graph * childGraph = new Graph(*graph);
 			childGraph->RemoveEdge(i);

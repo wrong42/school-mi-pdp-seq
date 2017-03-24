@@ -45,6 +45,6 @@ void DeleteGraphs(Graph * loadedGraph, Graph * resultGraph)
 		delete loadedGraph->m_Edges[i];
 	}
 	
-	delete loadedGraph->m_Edges;
+	delete[] loadedGraph->m_Edges;
 	delete loadedGraph;
 }
