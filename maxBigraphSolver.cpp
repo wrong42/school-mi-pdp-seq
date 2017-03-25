@@ -39,26 +39,63 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 	{
 		Graph * graph = new Graph(originalGraph);
 		graph->RemoveEdge(i);
-		m_GraphStack.push(graph);
+		FindMaxBigraphInternal(graph);
+//		m_GraphStack.push(graph);
 	}
 
-	cout << "Graphs in stack: " << m_GraphStack.size() << endl;
+/*	cout << "Graphs in stack: " << m_GraphStack.size() << endl;
 	while(!m_GraphStack.empty())
 	{
 		//cout << "Stack is not empty: Number of elements = " << m_GraphStack.size() << endl;
-		Graph * graph = m_GraphStack.front();
+		Graph * graph = m_GraphStack.top();
 		m_GraphStack.pop();
 
-		if (PossiblyBetterGraph(*graph))
+		if (graph->m_NumberOfEdgesCurrent > m_BestGraph->m_NumberOfEdgesCurrent)
 		{
 			TryPossiblyBetterGraph(graph);
 		}
 
 		if (graph != m_OriginalGraph && graph != m_BestGraph)
 			delete graph;
-	}
+	}*/
 
 	return m_BestGraph;
+}
+
+void MaxBigraphSolver::FindMaxBigraphInternal(Graph * graph)
+{
+	if (graph->m_NumberOfEdgesCurrent < graph->m_NumberOfNodes - 1)
+	{
+		if (graph != m_OriginalGraph && graph != m_BestGraph)
+			delete graph;
+		return;
+	}
+	
+	if (TryMakeBigraph(*graph))
+	{
+		AcceptBetterGraph(graph);
+		return;
+	}
+	else if (m_BigraphMaker.m_ColoredNodes.size() == 0 && m_BigraphMaker.m_ProcessedNodes.size() < graph->m_NumberOfNodes)
+	{
+		if (graph != m_OriginalGraph && graph != m_BestGraph)
+			delete graph;
+		return;
+	}
+
+	if (graph->m_NumberOfEdgesCurrent - 1 > m_BestGraph->m_NumberOfEdgesCurrent)
+	{
+		for (unsigned i = graph->m_LastErasedEdge + 1; i < graph->m_NumberOfEdgesOriginal; i++)
+		{
+			Graph * childGraph = new Graph(*graph);
+			childGraph->RemoveEdge(i);
+			//cout << "Adding graph to stack: NumberOfEdges: " << childGraph->m_Edges.size() << endl;
+			FindMaxBigraphInternal(childGraph);
+		}
+	}
+
+	if (graph != m_OriginalGraph && graph != m_BestGraph)
+		delete graph;
 }
 
 void MaxBigraphSolver::TryPossiblyBetterGraph(Graph * graph)
