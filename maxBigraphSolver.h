@@ -3,6 +3,7 @@
 
 #include <set>
 #include <stack>
+#include <queue>
 #include <vector>
 #include "graph.h"
 #include "bigraphMaker.h"
@@ -25,7 +26,7 @@ class MaxBigraphSolver
 		Graph * m_BestGraph;
 		Graph * m_OriginalGraph;
 		BigraphMaker m_BigraphMaker;
-		std::stack<Graph*> m_GraphStack;
+		std::queue<Graph*> m_GraphStack;
 };
 
 #endif // __MAX_BIGRAPH_SOLVER_H__

@@ -24,7 +24,7 @@ int main(int args, char * argv[])
 
 	/* GET MAX BIPARTHITE GRAPH */
 	Graph * result = solver.FindMaxBigraph(*graph);
-	cout << "RESULT Graph: NumberOfEdges = " << result->m_NumberOfEdgesOriginal << endl;
+	cout << "RESULT Graph: NumberOfEdges = " << result->m_NumberOfEdgesCurrent << endl;
 	result->Print();
 
 	/* DELETE SECTION */

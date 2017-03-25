@@ -46,7 +46,7 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 	while(!m_GraphStack.empty())
 	{
 		//cout << "Stack is not empty: Number of elements = " << m_GraphStack.size() << endl;
-		Graph * graph = m_GraphStack.top();
+		Graph * graph = m_GraphStack.front();
 		m_GraphStack.pop();
 
 		if (PossiblyBetterGraph(*graph))
@@ -64,7 +64,7 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 void MaxBigraphSolver::TryPossiblyBetterGraph(Graph * graph)
 {
 	//unsigned maximumNumberOfEdges = m_OriginalGraph->m_NumberOfNodes * m_OriginalGraph->m_NumberOfNodes / 4;
-	cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_NumberOfEdgesCurrent << endl;
+	//cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_NumberOfEdgesCurrent << endl;
 	//cout << ", bestGraph:NumberOfEdges: " << m_BestGraph->m_Edges.size() << endl;
 	
 	if (graph->m_NumberOfEdgesCurrent < graph->m_NumberOfNodes - 1)

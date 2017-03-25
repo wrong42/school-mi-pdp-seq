@@ -8,7 +8,7 @@ using namespace std;
 Graph::Graph(int numberOfNodes)
 {
 	m_NumberOfNodes = numberOfNodes;
-	m_LastErasedEdge = 0;
+	m_LastErasedEdge = -1;
 	m_AdjMatrixSize = GetSizeOfAdjMatrix();
 	m_AdjMatrix = new bool[m_AdjMatrixSize];
 	m_NodeColors = new Color[numberOfNodes];
@@ -40,12 +40,6 @@ Graph::~Graph()
 	delete[] m_NodeColors;
 }
 
-int Graph::GetSizeOfAdjMatrix() const
-{
-	int numberOfRows = m_NumberOfNodes - 1;
-	int arithSum = numberOfRows * m_NumberOfNodes / 2;
-	return arithSum;
-}
 
 bool Graph::AreNeighbours(int node1, int node2) const
 {
@@ -79,26 +73,37 @@ int Graph::GetEdgeIndex(int node1, int node2) const
 	return edgeIndex;
 }
 
-void Graph::RemoveNextEdge()
-{
-	m_EdgeMatrix[m_LastErasedEdge] = false;
-	Edge * e = m_Edges[m_LastErasedEdge];
-	int adjMatrixIndex = GetEdgeIndex(e->Node1, e->Node2);
-	m_AdjMatrix[adjMatrixIndex];
-
-	++m_LastErasedEdge;
-	--m_NumberOfEdgesCurrent;
-}
-
 void Graph::RemoveEdge(unsigned index)
 {
 	m_EdgeMatrix[index] = false;
 	Edge * e = m_Edges[index];
 	int adjMatrixIndex = GetEdgeIndex(e->Node1, e->Node2);
-	m_AdjMatrix[adjMatrixIndex];
+	m_AdjMatrix[adjMatrixIndex] = false;
 
 	m_LastErasedEdge = index;
 	--m_NumberOfEdgesCurrent;
+}
+
+bool Graph::ColorNeighbourNodes(int nodeIndex, Color color)
+{
+	for (int i = 0; i < m_NumberOfNodes; i++)
+	{
+		if (AreNeighbours(nodeIndex, i))
+		{
+			if (m_NodeColors[i] != Undefined && m_NodeColors[i] != color)
+			{
+				//cout << "Graph::ColorNeighbourNodes: Unable to color node " << i << ". Node is already colored: " << m_NodeColors[i] << endl;
+				return false;
+			}
+			else
+			{
+				//cout << "Graph::ColorNeighbourNodes: Coloring node " << i << " to color " << color << endl;
+				m_NodeColors[i] = color;
+			}
+		}
+	}
+
+	return true;
 }
 
 void Graph::Print() const
@@ -125,6 +130,24 @@ void Graph::Print() const
 	cout << endl;
 }
 
+int Graph::GetSizeOfAdjMatrix() const
+{
+	int numberOfRows = m_NumberOfNodes - 1;
+	int arithSum = numberOfRows * m_NumberOfNodes / 2;
+	return arithSum;
+}
+
+void Graph::RemoveNextEdge()
+{
+	m_EdgeMatrix[m_LastErasedEdge] = false;
+	Edge * e = m_Edges[m_LastErasedEdge];
+	int adjMatrixIndex = GetEdgeIndex(e->Node1, e->Node2);
+	m_AdjMatrix[adjMatrixIndex];
+
+	++m_LastErasedEdge;
+	--m_NumberOfEdgesCurrent;
+}
+
 int Graph::GetFirstUncoloredNode() const
 {
 	for (int i = 0; i < m_NumberOfNodes; i++)
@@ -136,26 +159,4 @@ int Graph::GetFirstUncoloredNode() const
 	}
 
 	return -1;
-}
-
-bool Graph::ColorNeighbourNodes(int nodeIndex, Color color)
-{
-	for (int i = 0; i < m_NumberOfNodes; i++)
-	{
-		if (AreNeighbours(nodeIndex, i))
-		{
-			if (m_NodeColors[i] != Undefined && m_NodeColors[i] != color)
-			{
-				//cout << "Graph::ColorNeighbourNodes: Unable to color node " << i << ". Node is already colored: " << m_NodeColors[i] << endl;
-				return false;
-			}
-			else
-			{
-				//cout << "Graph::ColorNeighbourNodes: Coloring node " << i << " to color " << color << endl;
-				m_NodeColors[i] = color;
-			}
-		}
-	}
-
-	return true;
 }
