@@ -19,12 +19,12 @@ int main(int args, char * argv[])
 
 	/* LOAD GRAPH FROM FILE */
 	Graph * graph = loader.LoadGraph(argv[1]);
-	cout << "Loaded Graph: NumberOfEdges = " << graph->m_Edges.size() << endl;
+	cout << "Loaded Graph: NumberOfEdges = " << graph->m_NumberOfEdgesOriginal << endl;
 	graph->Print();
 
 	/* GET MAX BIPARTHITE GRAPH */
 	Graph * result = solver.FindMaxBigraph(*graph);
-	cout << "RESULT Graph: NumberOfEdges = " << result->m_Edges.size() << endl;
+	cout << "RESULT Graph: NumberOfEdges = " << result->m_NumberOfEdgesCurrent << endl;
 	result->Print();
 
 	/* DELETE SECTION */
@@ -40,11 +40,11 @@ void DeleteGraphs(Graph * loadedGraph, Graph * resultGraph)
 		delete resultGraph;
 	}
 	
-	for (unsigned i = 0; i < loadedGraph->m_Edges.size(); i++)
+	for (unsigned i = 0; i < loadedGraph->m_NumberOfEdgesOriginal; i++)
 	{
 		delete loadedGraph->m_Edges[i];
 	}
 	
-	loadedGraph->m_Edges.clear();
+	delete[] loadedGraph->m_Edges;
 	delete loadedGraph;
 }

@@ -1,6 +1,10 @@
 #include <iostream>
 #include <queue>
 #include <set>
+<<<<<<< HEAD
+=======
+#include <cstring>
+>>>>>>> argumentsByValue
 #include <omp.h>
 #include "maxBigraphSolver.h"
 
@@ -8,132 +12,149 @@ using namespace std;
 
 MaxBigraphSolver::MaxBigraphSolver() : m_BigraphMaker()
 {
-	m_BestGraph = new Graph(0);
 }
 
 MaxBigraphSolver::~MaxBigraphSolver()
 {
-	for (unsigned i = 0; i < m_MissingEdges.size(); i++)
-		delete m_MissingEdges[i];
 }
 
 Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 {
-	m_OriginalGraph = &originalGraph;
-	m_GraphStack.push(&originalGraph);
-	//omp_set_num_threads(4);
+	m_BestGraph = new Graph(0);
+	m_BestGraph->m_Edges = originalGraph.m_Edges;
+	m_BestGraph->m_NumberOfEdgesOriginal = originalGraph.m_NumberOfEdgesOriginal;
+	m_BestGraph->m_NumberOfEdgesCurrent = 0;
+	m_BestGraph->m_EdgeMatrix = new bool[originalGraph.m_NumberOfEdgesOriginal];
+	memset((void*)m_BestGraph->m_EdgeMatrix, 0, originalGraph.m_NumberOfEdgesOriginal * sizeof(bool));
 
-	while(!m_GraphStack.empty())
+	cout << "Finding max bigraph" << endl;
+
+	if (m_BigraphMaker.MakeBigraph(originalGraph))
 	{
-		//cout << "Stack is not empty: Number of elements = " << m_GraphStack.size() << endl;
-		Graph * graph = m_GraphStack.top();
-		m_GraphStack.pop();
+		cout << "ORIGINAL GRAPH IS RESULT" << endl;
+		return &originalGraph;
+	}
 
-		if (PossiblyBetterGraph(*graph))
+	#pragma omp parallel num_threads(4)
+	{	
+		#pragma omp single
 		{
-			TryPossiblyBetterGraph(graph);
-/*			#pragma omp parallel
+			for (int i = 0; i < originalGraph.m_NumberOfEdgesOriginal; i++)
 			{
+				//Graph * graph = new Graph(originalGraph);
+				Graph graph(originalGraph);
+				graph.RemoveEdge(i);
+				graph.m_LastErasedEdge = i;
+				
 				#pragma omp task
-				TryPossiblyBetterGraph(*graph);	
-				#pragma omp taskwait
-			}*/
+				FindMaxBigraphInternal(graph);
+			}
 		}
-
-		if (graph != m_OriginalGraph && graph != m_BestGraph)
-			delete graph;
 	}
 
 	return m_BestGraph;
 }
 
-void MaxBigraphSolver::TryPossiblyBetterGraph(Graph * graph)
+void MaxBigraphSolver::FindMaxBigraphInternal(Graph graph)
 {
-	unsigned maximumNumberOfEdges = m_OriginalGraph->m_NumberOfNodes * m_OriginalGraph->m_NumberOfNodes / 4;
-	//cout << "GraphStack::POP:TryingGraph: NumberOfGraphEdges: " << graph->m_Edges.size();
-	//cout << ", bestGraph:NumberOfEdges: " << m_BestGraph->m_Edges.size() << endl;
-	
-	if (graph->m_Edges.size() < graph->m_NumberOfNodes - 1)
-	{
-		return;
-	}/*
-	if (graph->m_Edges.size() > maximumNumberOfEdges)
-	{
-		AddChildGraphsToStack(graph);
-		AddProcessedGraph(graph);
-		return;
-	}*/
-
-	if (GraphHasBeenProcessed(*graph))
-	{
-		return;
-	}
-	
-	if (TryMakeBigraph(*graph))
-	{
-		AcceptBetterGraph(graph);
-		return;
-	}
-	else if (m_BigraphMaker.m_ColoredNodes.size() == 0 && m_BigraphMaker.m_ProcessedNodes.size() < graph->m_NumberOfNodes)
+	if (graph.m_NumberOfEdgesCurrent < graph.m_NumberOfNodes - 1)
 	{
 		return;
 	}
 
-	AddProcessedGraph(graph);
-	AddChildGraphsToStack(graph);
-}
-void MaxBigraphSolver::AcceptBetterGraph(Graph * graph)
-{
-	cout << "FOUND BETTER GRAPH: NumberOfEdges = " << graph->m_Edges.size() << endl;
+	queue<int> m_ColoredNodes;
+	set<int> m_ProcessedNodes;
 
-	if (m_BestGraph != m_OriginalGraph)
-		delete m_BestGraph;
-	m_BestGraph = graph;
-}
+	graph.m_NodeColors[0] = White;
+	m_ColoredNodes.push(0);
+	bool coloringSuccessful = true;
 
-void MaxBigraphSolver::AddProcessedGraph(Graph * graph)
-{
-	if (graph->m_MissingEdgesById.size() < MaximumNumberOfMissingEdges)
+	while(!m_ColoredNodes.empty())
 	{
-		set<int> * missingEdges = new set<int>(graph->m_MissingEdgesById);
-		m_MissingEdges.push_back(missingEdges);
-		m_ProcessedGraphsByEdge.insert(*missingEdges);
-	}
-}
+		int nodeIndex = m_ColoredNodes.front();
+		m_ColoredNodes.pop();
 
-void MaxBigraphSolver::AddChildGraphsToStack(Graph * graph)
-{
-	if (graph->m_Edges.size() - 1 > m_BestGraph->m_Edges.size())
-	{
-		for (unsigned i = 0; i < graph->m_Edges.size(); i++)
+		Color neighbourColor = graph.m_NodeColors[nodeIndex] == Black ? White : Black;
+		
+		if (!graph.ColorNeighbourNodes(nodeIndex, neighbourColor))
 		{
-			Graph * childGraph = new Graph(*graph);
-			childGraph->RemoveEdge(i);
+			//cout << "BigraphMaker::ColorNodes: UNABLE TO COLOR GRAPH" << endl;
+			coloringSuccessful = false;
+			break;
+		}
+
+		m_ProcessedNodes.insert(nodeIndex);
+
+		for (int i = 0; i < graph.m_NumberOfNodes; i++)
+		{
+			if (graph.AreNeighbours(nodeIndex, i))
+			{
+				if (m_ProcessedNodes.find(i) == m_ProcessedNodes.end())
+				{
+					//cout << "BigraphMaker::ColorNodes: Pushing not processed node: " << i << " to nodeToColor queue" << endl;
+					m_ColoredNodes.push(i);
+				}
+			}
+		}
+
+		if (m_ColoredNodes.empty())
+		{
+			int notColoredNode = graph.GetFirstUncoloredNode(); 
+			//cout << "BigraphMaker::ColorNodes: Nodes to color queue is empty. Index of first not yet colored node: " << notColoredNode << endl;
+			if (notColoredNode > -1)
+			{
+				graph.m_NodeColors[notColoredNode] = White;
+				m_ColoredNodes.push(notColoredNode);
+			}
+		}
+	} // End of graph coloring
+
+	if (coloringSuccessful)
+	{
+		AcceptBetterGraph(&graph);
+		return;
+	}
+	else if (m_ColoredNodes.size() == 0 && m_ProcessedNodes.size() < graph.m_NumberOfNodes)
+	{
+		return;
+	}
+
+	int numberOfBestGraphEdges = 0;
+	
+	#pragma omp atomic read
+	numberOfBestGraphEdges = m_BestGraph->m_NumberOfEdgesCurrent;
+
+	if (graph.m_NumberOfEdgesCurrent - 1 > numberOfBestGraphEdges)
+	{
+		for (unsigned i = graph.m_LastErasedEdge + 1; i < graph.m_NumberOfEdgesOriginal; i++)
+		{
+			//Graph * childGraph = new Graph(*graph);
+			Graph childGraph(graph);
+			childGraph.RemoveEdge(i);
 			//cout << "Adding graph to stack: NumberOfEdges: " << childGraph->m_Edges.size() << endl;
-			m_GraphStack.push(childGraph);
+			
+			if (graph.m_NumberOfEdgesCurrent - 2 == numberOfBestGraphEdges)
+				FindMaxBigraphInternal(childGraph);
+			else
+			{			
+				#pragma omp task
+				FindMaxBigraphInternal(childGraph);
+			}	
 		}
 	}
 }
 
-bool MaxBigraphSolver::PossiblyBetterGraph(const Graph & graph) const
-{
-	return graph.m_Edges.size() > m_BestGraph->m_Edges.size();
-}
 
-bool MaxBigraphSolver::GraphHasBeenProcessed(const Graph & graph) const
+void MaxBigraphSolver::AcceptBetterGraph(Graph * graph)
 {
-	if (graph.m_MissingEdgesById.size() > MaximumNumberOfMissingEdges)
-		return false;
+	cout << "FOUND BETTER GRAPH: NumberOfEdges = " << graph->m_NumberOfEdgesCurrent << endl;
 
-	return m_ProcessedGraphsByEdge.find(graph.m_MissingEdgesById) != m_ProcessedGraphsByEdge.end();
-}
+	/*if (m_BestGraph != m_OriginalGraph)
+		delete m_BestGraph;*/
 
-/***
-*<summary> Tries to color the graph with 2 colors. </summary>
-*<param> The graph to color. </param>
-*<return> True if it is possible to color the graph with 2 colors, otherwise false.</return>
-***/
-bool MaxBigraphSolver::TryMakeBigraph(Graph & graph)
-{
-	return m_BigraphMaker.MakeBigraph(graph);
+	#pragma omp critical
+	{
+		delete m_BestGraph;
+		m_BestGraph = new Graph(*graph);	
+	}
 }

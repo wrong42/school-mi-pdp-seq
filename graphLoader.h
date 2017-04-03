@@ -19,9 +19,11 @@ class GraphLoader
 		void CloseInputFile();
 		void InsertNewEdge(int &, char, Edge*);
 	private:
-		std::ifstream * m_InputFile;
-		Graph * m_Graph;
 		int m_NumberOfGraphNodes;
+		Graph * m_Graph;
+		
+		std::ifstream * m_InputFile;
+		std::vector<Edge*> m_Edges;
 };
 
 #endif // __GRAPH_LOADER_H__

@@ -9,6 +9,7 @@ using namespace std;
 Graph::Graph(int numberOfNodes)
 {
 	m_NumberOfNodes = numberOfNodes;
+	m_LastErasedEdge = -1;
 	m_AdjMatrixSize = GetSizeOfAdjMatrix();
 	m_AdjMatrix = new bool[m_AdjMatrixSize];
 	m_NodeColors = new Color[numberOfNodes];
@@ -16,30 +17,31 @@ Graph::Graph(int numberOfNodes)
 	memset((void*)m_NodeColors, Undefined, numberOfNodes * sizeof(Color));
 }
 
-Graph::Graph(const Graph & src) : m_Edges(src.m_Edges), m_MissingEdgesById(src.m_MissingEdgesById), m_EdgeMappings(src.m_EdgeMappings)
+Graph::Graph(const Graph & src)
 {
 	m_NumberOfNodes = src.m_NumberOfNodes;
-	//m_Edges = src.m_Edges;
+	m_NumberOfEdgesOriginal = src.m_NumberOfEdgesOriginal;
+	m_NumberOfEdgesCurrent = src.m_NumberOfEdgesCurrent;
 	m_AdjMatrixSize = src.m_AdjMatrixSize;
+	m_Edges = src.m_Edges;
+	m_LastErasedEdge = src.m_LastErasedEdge;
+
 	m_AdjMatrix = new bool[m_AdjMatrixSize];
+	m_EdgeMatrix = new bool[m_NumberOfEdgesOriginal];
 	m_NodeColors = new Color[m_NumberOfNodes];
 	
 	memcpy((void*)m_AdjMatrix, src.m_AdjMatrix, m_AdjMatrixSize * sizeof(bool));
+	memcpy((void*)m_EdgeMatrix, src.m_EdgeMatrix, m_NumberOfEdgesOriginal * sizeof(bool));
 	memset((void*)m_NodeColors, Undefined, m_NumberOfNodes * sizeof(Color));
 }
 
 Graph::~Graph()
 {
 	delete[] m_AdjMatrix;
+	delete[] m_EdgeMatrix;
 	delete[] m_NodeColors;
 }
 
-int Graph::GetSizeOfAdjMatrix() const
-{
-	int numberOfRows = m_NumberOfNodes - 1;
-	int arithSum = numberOfRows * m_NumberOfNodes / 2;
-	return arithSum;
-}
 
 bool Graph::AreNeighbours(int node1, int node2) const
 {
@@ -79,17 +81,35 @@ int Graph::GetEdgeIndex(int node1, int node2) const
 
 void Graph::RemoveEdge(unsigned index)
 {
-	//cout << "Graph::RemoveEdge: Removing edge with index " << index << endl;
-	Edge * edge = m_Edges.at(index);
-	int edgeIndex = GetEdgeIndex(edge->Node1, edge->Node2);
-	m_AdjMatrix[edgeIndex] = false;
-	
-	vector<Edge*>::iterator it = m_Edges.begin();
-	for (unsigned i = 0; i < index; i++)
-		++it;
-	
-	m_Edges.erase(it);
-	m_MissingEdgesById.insert(index);
+	m_EdgeMatrix[index] = false;
+	Edge * e = m_Edges[index];
+	int adjMatrixIndex = GetEdgeIndex(e->Node1, e->Node2);
+	m_AdjMatrix[adjMatrixIndex] = false;
+
+	m_LastErasedEdge = index;
+	--m_NumberOfEdgesCurrent;
+}
+
+bool Graph::ColorNeighbourNodes(int nodeIndex, Color color)
+{
+	for (int i = 0; i < m_NumberOfNodes; i++)
+	{
+		if (AreNeighbours(nodeIndex, i))
+		{
+			if (m_NodeColors[i] != Undefined && m_NodeColors[i] != color)
+			{
+				//cout << "Graph::ColorNeighbourNodes: Unable to color node " << i << ". Node is already colored: " << m_NodeColors[i] << endl;
+				return false;
+			}
+			else
+			{
+				//cout << "Graph::ColorNeighbourNodes: Coloring node " << i << " to color " << color << endl;
+				m_NodeColors[i] = color;
+			}
+		}
+	}
+
+	return true;
 }
 
 void Graph::Print() const
@@ -116,8 +136,27 @@ void Graph::Print() const
 	cout << endl;
 }
 
+int Graph::GetSizeOfAdjMatrix() const
+{
+	int numberOfRows = m_NumberOfNodes - 1;
+	int arithSum = numberOfRows * m_NumberOfNodes / 2;
+	return arithSum;
+}
+
+void Graph::RemoveNextEdge()
+{
+	m_EdgeMatrix[m_LastErasedEdge] = false;
+	Edge * e = m_Edges[m_LastErasedEdge];
+	int adjMatrixIndex = GetEdgeIndex(e->Node1, e->Node2);
+	m_AdjMatrix[adjMatrixIndex];
+
+	++m_LastErasedEdge;
+	--m_NumberOfEdgesCurrent;
+}
+
 int Graph::GetFirstUncoloredNode() const
 {
+	vector<int> neighbours;
 	for (int i = 0; i < m_NumberOfNodes; i++)
 	{
 		if (m_NodeColors[i] == Undefined)
@@ -127,30 +166,4 @@ int Graph::GetFirstUncoloredNode() const
 	}
 
 	return -1;
-}
-
-vector<int> Graph::ColorNeighbourNodes(int nodeIndex, Color color)
-{
-	vector<int> neighbours;
-	for (int i = 0; i < m_NumberOfNodes; i++)
-	{
-		if (AreNeighbours(nodeIndex, i))
-		{
-			if (m_NodeColors[i] != Undefined && m_NodeColors[i] != color)
-			{
-				//cout << "Graph::ColorNeighbourNodes: Unable to color node " << i << ". Node is already colored: " << m_NodeColors[i] << endl;
-				vector<int> empty;
-				return empty;
-			}
-			else
-			{
-				//cout << "Graph::ColorNeighbourNodes: Coloring node " << i << " to color " << color << endl;
-				m_NodeColors[i] = color;
-				neighbours.push_back(i);
-			}
-		}
-	}
-
-	//cout << "GRAPH::Color neighbours - count = " << neighbours.size() << endl;
-	return neighbours;
 }

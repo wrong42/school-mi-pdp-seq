@@ -11,17 +11,24 @@ class Graph
 {
 	public:
 		int m_NumberOfNodes;
+		int m_NumberOfEdgesOriginal;
+		int m_NumberOfEdgesCurrent;
+		int m_LastErasedEdge;
+
 		bool * m_AdjMatrix;
+		bool * m_EdgeMatrix;
 		Color * m_NodeColors;
-		std::vector<Edge*> m_Edges;
-		std::set<int> m_MissingEdgesById;
-		std::map<std::pair<int,int>, int> m_EdgeMappings;
+		Edge ** m_Edges; // NEW - shared for all graphs
+
+		//std::set<int> m_MissingEdgesById;
+		//std::vector<Edge*> m_Edges; //OLD
 
 	public:
 		Graph(int numberOfNodes);
 		Graph(const Graph &);
 	  ~Graph();
 
+		void RemoveNextEdge();
 		void RemoveEdge(unsigned);
 		int GetEdgeIndex(int, int) const;
 		bool AreNeighbours(int, int) const; 		
