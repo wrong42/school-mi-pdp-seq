@@ -15,7 +15,7 @@ class MaxBigraphSolver
 				~MaxBigraphSolver();
 		Graph * FindMaxBigraph(Graph &);
 	private:
-		void FindMaxBigraphInternal(Graph*);
+		void FindMaxBigraphInternal(Graph);
 		void AddProcessedGraph(Graph *);
 		void AcceptBetterGraph(Graph *);
 

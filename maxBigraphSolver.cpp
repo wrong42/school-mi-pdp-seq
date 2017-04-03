@@ -38,26 +38,26 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 		//Graph * graph = new Graph(originalGraph);
 		Graph graph(originalGraph);
 		graph.RemoveEdge(i);
-		FindMaxBigraphInternal(&graph);
+		graph.m_LastErasedEdge = i;
+		FindMaxBigraphInternal(graph);
 	}
 
 	return m_BestGraph;
 }
 
-void MaxBigraphSolver::FindMaxBigraphInternal(Graph * graph)
+void MaxBigraphSolver::FindMaxBigraphInternal(Graph graph)
 {
-	if (graph->m_NumberOfEdgesCurrent < graph->m_NumberOfNodes - 1)
+	if (graph.m_NumberOfEdgesCurrent < graph.m_NumberOfNodes - 1)
 	{
-		if (graph != m_OriginalGraph && graph != m_BestGraph)
-			delete graph;
+/*		if (graph != m_OriginalGraph && graph != m_BestGraph)
+			delete graph;*/
 		return;
 	}
-	
 
 	queue<int> m_ColoredNodes;
 	set<int> m_ProcessedNodes;
 
-	graph->m_NodeColors[0] = White;
+	graph.m_NodeColors[0] = White;
 	m_ColoredNodes.push(0);
 	bool coloringSuccessful = true;
 
@@ -66,9 +66,9 @@ void MaxBigraphSolver::FindMaxBigraphInternal(Graph * graph)
 		int nodeIndex = m_ColoredNodes.front();
 		m_ColoredNodes.pop();
 
-		Color neighbourColor = graph->m_NodeColors[nodeIndex] == Black ? White : Black;
+		Color neighbourColor = graph.m_NodeColors[nodeIndex] == Black ? White : Black;
 		
-		if (!graph->ColorNeighbourNodes(nodeIndex, neighbourColor))
+		if (!graph.ColorNeighbourNodes(nodeIndex, neighbourColor))
 		{
 			//cout << "BigraphMaker::ColorNodes: UNABLE TO COLOR GRAPH" << endl;
 			coloringSuccessful = false;
@@ -77,9 +77,9 @@ void MaxBigraphSolver::FindMaxBigraphInternal(Graph * graph)
 
 		m_ProcessedNodes.insert(nodeIndex);
 
-		for (int i = 0; i < graph->m_NumberOfNodes; i++)
+		for (int i = 0; i < graph.m_NumberOfNodes; i++)
 		{
-			if (graph->AreNeighbours(nodeIndex, i))
+			if (graph.AreNeighbours(nodeIndex, i))
 			{
 				if (m_ProcessedNodes.find(i) == m_ProcessedNodes.end())
 				{
@@ -91,11 +91,11 @@ void MaxBigraphSolver::FindMaxBigraphInternal(Graph * graph)
 
 		if (m_ColoredNodes.empty())
 		{
-			int notColoredNode = graph->GetFirstUncoloredNode(); 
+			int notColoredNode = graph.GetFirstUncoloredNode(); 
 			//cout << "BigraphMaker::ColorNodes: Nodes to color queue is empty. Index of first not yet colored node: " << notColoredNode << endl;
 			if (notColoredNode > -1)
 			{
-				graph->m_NodeColors[notColoredNode] = White;
+				graph.m_NodeColors[notColoredNode] = White;
 				m_ColoredNodes.push(notColoredNode);
 			}
 		}
@@ -103,29 +103,30 @@ void MaxBigraphSolver::FindMaxBigraphInternal(Graph * graph)
 
 	if (coloringSuccessful)
 	{
-		AcceptBetterGraph(graph);
+		AcceptBetterGraph(&graph);
 		return;
 	}
-	else if (m_ColoredNodes.size() == 0 && m_ProcessedNodes.size() < graph->m_NumberOfNodes)
+	else if (m_ColoredNodes.size() == 0 && m_ProcessedNodes.size() < graph.m_NumberOfNodes)
 	{
-		if (graph != m_OriginalGraph && graph != m_BestGraph)
+/*		if (graph != m_OriginalGraph && graph != m_BestGraph)
 			delete graph;
-		return;
+*/		return;
 	}
 
-	if (graph->m_NumberOfEdgesCurrent - 1 > m_BestGraph->m_NumberOfEdgesCurrent)
+	if (graph.m_NumberOfEdgesCurrent - 1 > m_BestGraph->m_NumberOfEdgesCurrent)
 	{
-		for (unsigned i = graph->m_LastErasedEdge + 1; i < graph->m_NumberOfEdgesOriginal; i++)
+		for (unsigned i = graph.m_LastErasedEdge + 1; i < graph.m_NumberOfEdgesOriginal; i++)
 		{
-			Graph * childGraph = new Graph(*graph);
-			childGraph->RemoveEdge(i);
+			//Graph * childGraph = new Graph(*graph);
+			Graph childGraph(graph);
+			childGraph.RemoveEdge(i);
 			//cout << "Adding graph to stack: NumberOfEdges: " << childGraph->m_Edges.size() << endl;
 			FindMaxBigraphInternal(childGraph);
 		}
 	}
 
-	if (graph != m_OriginalGraph && graph != m_BestGraph)
-		delete graph;
+/*	if (graph != m_OriginalGraph && graph != m_BestGraph)
+		delete graph;*/
 }
 
 
@@ -133,7 +134,8 @@ void MaxBigraphSolver::AcceptBetterGraph(Graph * graph)
 {
 	cout << "FOUND BETTER GRAPH: NumberOfEdges = " << graph->m_NumberOfEdgesCurrent << endl;
 
-	if (m_BestGraph != m_OriginalGraph)
-		delete m_BestGraph;
-	m_BestGraph = graph;
+	/*if (m_BestGraph != m_OriginalGraph)
+		delete m_BestGraph;*/
+	delete m_BestGraph;
+	m_BestGraph = new Graph(*graph);
 }
