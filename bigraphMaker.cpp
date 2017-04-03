@@ -21,7 +21,7 @@ void BigraphMaker::InitializeQueue()
 
 bool BigraphMaker::ColorNodes()
 {
-	while(1)
+	while(!m_ColoredNodes.empty())
 	{
 		int nodeIndex = GetNextColoredNode();
 		Color neighbourColor = GetNeighbourColor(nodeIndex);
@@ -36,12 +36,7 @@ bool BigraphMaker::ColorNodes()
 
 		AddNodeToProcessedNodes(nodeIndex);
 		AddNodeNeighboursToQueue(nodeIndex);
-		AddNotColoredNodeIfAny();
-
-		if (m_ColoredNodes.empty())
-		{
-			break;
-		}
+		//AddNotColoredNodeIfAny();
 	}
 
 	return true;
