@@ -5,6 +5,8 @@
 #include <omp.h>
 #include "maxBigraphSolver.h"
 
+#define NUMBER_OF_THREADS 4
+
 using namespace std;
 
 MaxBigraphSolver::MaxBigraphSolver() : m_BigraphMaker()
@@ -32,21 +34,47 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 		return &originalGraph;
 	}
 
-	#pragma omp parallel num_threads(4)
+	// Zkusit graf bez jedne hrany a pak pridat vsechny podgrafy
+	Graph firstGraph(originalGraph);
+	firstGraph.RemoveEdge(0);
+	firstGraph.m_LastErasedEdge = 0;
+
+	if (m_BigraphMaker.MakeBigraph(firstGraph))
+	{
+		return new Graph(firstGraph);
+	}
+
+	// First lvl edge removing from index 1
+	//#pragma omp for schedule(static, originalGraph.m_NumberOfEdgesOriginal / NUMBER_OF_THREADS)
+	for (int i = 1; i < originalGraph.m_NumberOfEdgesOriginal; i++)
+	{
+		//Graph * graph = new Graph(originalGraph);
+		Graph graph(originalGraph);
+		graph.RemoveEdge(i);
+		graph.m_LastErasedEdge = i;
+		m_Graphs.push_back(graph);
+	}
+
+	// Second lvl edge removing (edge 0 already removed) from index 1
+	//#pragma omp barrier
+	//#pragma omp for schedule(static, (originalGraph.m_NumberOfEdgesOriginal - 1)/ NUMBER_OF_THREADS)
+	for (int i = 1; i < firstGraph.m_NumberOfEdgesOriginal; i++)
+	{
+		//Graph * graph = new Graph(originalGraph);
+		Graph graph(firstGraph);
+		graph.RemoveEdge(i);
+		m_Graphs.push_back(graph);
+	}
+
+	#pragma omp parallel num_threads(NUMBER_OF_THREADS)
 	{	
-		#pragma omp single
+		//#pragma omp barrier
+		#pragma omp for schedule(static,1)
+		for (int i = 0; i < originalGraph.m_NumberOfEdgesOriginal; i++)
 		{
-			for (int i = 0; i < originalGraph.m_NumberOfEdgesOriginal; i++)
-			{
-				//Graph * graph = new Graph(originalGraph);
-				Graph graph(originalGraph);
-				graph.RemoveEdge(i);
-				graph.m_LastErasedEdge = i;
-				
-				#pragma omp task
-				FindMaxBigraphInternal(graph);
-			}
+			FindMaxBigraphInternal(m_Graphs[i]);
 		}
+		
 	}
 
 	return m_BestGraph;
@@ -130,13 +158,8 @@ void MaxBigraphSolver::FindMaxBigraphInternal(Graph graph)
 			childGraph.RemoveEdge(i);
 			//cout << "Adding graph to stack: NumberOfEdges: " << childGraph->m_Edges.size() << endl;
 			
-			if (graph.m_NumberOfEdgesCurrent - 2 == numberOfBestGraphEdges)
-				FindMaxBigraphInternal(childGraph);
-			else
-			{			
-				#pragma omp task
-				FindMaxBigraphInternal(childGraph);
-			}	
+			FindMaxBigraphInternal(childGraph);
+	
 		}
 	}
 }

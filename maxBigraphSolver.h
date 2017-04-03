@@ -21,6 +21,7 @@ class MaxBigraphSolver
 
 	private:
 		Graph * m_BestGraph;
+		std::vector<Graph> m_Graphs;
 		BigraphMaker m_BigraphMaker;
 };
 
