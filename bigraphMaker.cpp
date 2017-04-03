@@ -36,7 +36,7 @@ bool BigraphMaker::ColorNodes()
 
 		AddNodeToProcessedNodes(nodeIndex);
 		AddNodeNeighboursToQueue(nodeIndex);
-		//AddNotColoredNodeIfAny();
+		AddNotColoredNodeIfAny();
 	}
 
 	return true;

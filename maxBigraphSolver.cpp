@@ -106,6 +106,17 @@ void MaxBigraphSolver::FindMaxBigraphInternal(Graph * graph)
 				}
 			}
 		}
+
+		if (m_ColoredNodes.empty())
+		{
+			int notColoredNode = graph->GetFirstUncoloredNode(); 
+			//cout << "BigraphMaker::ColorNodes: Nodes to color queue is empty. Index of first not yet colored node: " << notColoredNode << endl;
+			if (notColoredNode > -1)
+			{
+				graph->m_NodeColors[notColoredNode] = White;
+				m_ColoredNodes.push(notColoredNode);
+			}
+		}
 	}
 
 	if (coloringSuccessful)
