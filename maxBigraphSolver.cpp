@@ -2,6 +2,7 @@
 #include <queue>
 #include <set>
 #include <cstring>
+#include <omp.h>
 #include "maxBigraphSolver.h"
 
 using namespace std;
@@ -31,15 +32,21 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 		return &originalGraph;
 	}
 
-	m_OriginalGraph = &originalGraph;
-	
-	for (int i = 0; i < originalGraph.m_NumberOfEdgesOriginal; i++)
-	{
-		//Graph * graph = new Graph(originalGraph);
-		Graph graph(originalGraph);
-		graph.RemoveEdge(i);
-		graph.m_LastErasedEdge = i;
-		FindMaxBigraphInternal(graph);
+	#pragma omp parallel num_threads(4)
+	{	
+		#pragma omp single
+		{
+			for (int i = 0; i < originalGraph.m_NumberOfEdgesOriginal; i++)
+			{
+				//Graph * graph = new Graph(originalGraph);
+				Graph graph(originalGraph);
+				graph.RemoveEdge(i);
+				graph.m_LastErasedEdge = i;
+				
+				#pragma omp task
+				FindMaxBigraphInternal(graph);
+			}
+		}
 	}
 
 	return m_BestGraph;
@@ -49,8 +56,6 @@ void MaxBigraphSolver::FindMaxBigraphInternal(Graph graph)
 {
 	if (graph.m_NumberOfEdgesCurrent < graph.m_NumberOfNodes - 1)
 	{
-/*		if (graph != m_OriginalGraph && graph != m_BestGraph)
-			delete graph;*/
 		return;
 	}
 
@@ -99,7 +104,7 @@ void MaxBigraphSolver::FindMaxBigraphInternal(Graph graph)
 				m_ColoredNodes.push(notColoredNode);
 			}
 		}
-	}
+	} // End of graph coloring
 
 	if (coloringSuccessful)
 	{
@@ -108,12 +113,15 @@ void MaxBigraphSolver::FindMaxBigraphInternal(Graph graph)
 	}
 	else if (m_ColoredNodes.size() == 0 && m_ProcessedNodes.size() < graph.m_NumberOfNodes)
 	{
-/*		if (graph != m_OriginalGraph && graph != m_BestGraph)
-			delete graph;
-*/		return;
+		return;
 	}
 
-	if (graph.m_NumberOfEdgesCurrent - 1 > m_BestGraph->m_NumberOfEdgesCurrent)
+	int numberOfBestGraphEdges = 0;
+	
+	#pragma omp atomic read
+	numberOfBestGraphEdges = m_BestGraph->m_NumberOfEdgesCurrent;
+
+	if (graph.m_NumberOfEdgesCurrent - 1 > numberOfBestGraphEdges)
 	{
 		for (unsigned i = graph.m_LastErasedEdge + 1; i < graph.m_NumberOfEdgesOriginal; i++)
 		{
@@ -121,12 +129,16 @@ void MaxBigraphSolver::FindMaxBigraphInternal(Graph graph)
 			Graph childGraph(graph);
 			childGraph.RemoveEdge(i);
 			//cout << "Adding graph to stack: NumberOfEdges: " << childGraph->m_Edges.size() << endl;
-			FindMaxBigraphInternal(childGraph);
+			
+			if (graph.m_NumberOfEdgesCurrent - 2 == numberOfBestGraphEdges)
+				FindMaxBigraphInternal(childGraph);
+			else
+			{			
+				#pragma omp task
+				FindMaxBigraphInternal(childGraph);
+			}	
 		}
 	}
-
-/*	if (graph != m_OriginalGraph && graph != m_BestGraph)
-		delete graph;*/
 }
 
 
@@ -136,6 +148,10 @@ void MaxBigraphSolver::AcceptBetterGraph(Graph * graph)
 
 	/*if (m_BestGraph != m_OriginalGraph)
 		delete m_BestGraph;*/
-	delete m_BestGraph;
-	m_BestGraph = new Graph(*graph);
+
+	#pragma omp critical
+	{
+		delete m_BestGraph;
+		m_BestGraph = new Graph(*graph);	
+	}
 }
