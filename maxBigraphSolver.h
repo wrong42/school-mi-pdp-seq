@@ -15,12 +15,7 @@ class MaxBigraphSolver
 				~MaxBigraphSolver();
 		Graph * FindMaxBigraph(Graph &);
 	private:
-		void FindMaxBigraphInternal(Graph *);
-		bool TryMakeBigraph(Graph &);
-		bool GraphHasBeenProcessed(const Graph &) const;
-		bool PossiblyBetterGraph(const Graph &) const;
-		void TryPossiblyBetterGraph(Graph *);
-		void AddChildGraphsToStack(Graph *);
+		void FindMaxBigraphInternal(Graph*);
 		void AddProcessedGraph(Graph *);
 		void AcceptBetterGraph(Graph *);
 
