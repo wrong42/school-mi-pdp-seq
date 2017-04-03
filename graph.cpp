@@ -23,6 +23,7 @@ Graph::Graph(const Graph & src)
 	m_NumberOfEdgesCurrent = src.m_NumberOfEdgesCurrent;
 	m_AdjMatrixSize = src.m_AdjMatrixSize;
 	m_Edges = src.m_Edges;
+	m_LastErasedEdge = src.m_LastErasedEdge;
 
 	m_AdjMatrix = new bool[m_AdjMatrixSize];
 	m_EdgeMatrix = new bool[m_NumberOfEdgesOriginal];
