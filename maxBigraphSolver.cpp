@@ -71,12 +71,49 @@ void MaxBigraphSolver::FindMaxBigraphInternal(Graph * graph)
 		return;
 	}
 	
-	if (TryMakeBigraph(*graph))
+
+	queue<int> m_ColoredNodes;
+	set<int> m_ProcessedNodes;
+
+	graph->m_NodeColors[0] = White;
+	m_ColoredNodes.push(0);
+	bool coloringSuccessful = true;
+
+	while(!m_ColoredNodes.empty())
+	{
+		int nodeIndex = m_ColoredNodes.front();
+		m_ColoredNodes.pop();
+
+		Color neighbourColor = graph->m_NodeColors[nodeIndex] == Black ? White : Black;
+		
+		if (!graph->ColorNeighbourNodes(nodeIndex, neighbourColor))
+		{
+			//cout << "BigraphMaker::ColorNodes: UNABLE TO COLOR GRAPH" << endl;
+			coloringSuccessful = false;
+			break;
+		}
+
+		m_ProcessedNodes.insert(nodeIndex);
+
+		for (int i = 0; i < graph->m_NumberOfNodes; i++)
+		{
+			if (graph->AreNeighbours(nodeIndex, i))
+			{
+				if (m_ProcessedNodes.find(i) == m_ProcessedNodes.end())
+				{
+					//cout << "BigraphMaker::ColorNodes: Pushing not processed node: " << i << " to nodeToColor queue" << endl;
+					m_ColoredNodes.push(i);
+				}
+			}
+		}
+	}
+
+	if (coloringSuccessful)
 	{
 		AcceptBetterGraph(graph);
 		return;
 	}
-	else if (m_BigraphMaker.m_ColoredNodes.size() == 0 && m_BigraphMaker.m_ProcessedNodes.size() < graph->m_NumberOfNodes)
+	else if (m_ColoredNodes.size() == 0 && m_ProcessedNodes.size() < graph->m_NumberOfNodes)
 	{
 		if (graph != m_OriginalGraph && graph != m_BestGraph)
 			delete graph;

@@ -23,6 +23,7 @@ class MaxBigraphSolver
 		void AddChildGraphsToStack(Graph *);
 		void AddProcessedGraph(Graph *);
 		void AcceptBetterGraph(Graph *);
+
 	private:
 		Graph * m_BestGraph;
 		Graph * m_OriginalGraph;
