@@ -18,10 +18,13 @@ class MaxBigraphSolver
 		void FindMaxBigraphInternal(Graph);
 		void AddProcessedGraph(Graph *);
 		void AcceptBetterGraph(Graph *);
+		void TrySecondLvlGraphs();
+		void InitializeBestGraph(Graph &);
 
 	private:
 		Graph * m_BestGraph;
 		std::vector<Graph> m_Graphs;
+		std::vector<Graph> m_FirstLvlGraphs;
 		BigraphMaker m_BigraphMaker;
 };
 

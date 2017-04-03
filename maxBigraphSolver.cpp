@@ -19,14 +19,8 @@ MaxBigraphSolver::~MaxBigraphSolver()
 
 Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 {
-	m_BestGraph = new Graph(0);
-	m_BestGraph->m_Edges = originalGraph.m_Edges;
-	m_BestGraph->m_NumberOfEdgesOriginal = originalGraph.m_NumberOfEdgesOriginal;
-	m_BestGraph->m_NumberOfEdgesCurrent = 0;
-	m_BestGraph->m_EdgeMatrix = new bool[originalGraph.m_NumberOfEdgesOriginal];
-	memset((void*)m_BestGraph->m_EdgeMatrix, 0, originalGraph.m_NumberOfEdgesOriginal * sizeof(bool));
-
 	cout << "Finding max bigraph" << endl;
+	InitializeBestGraph(originalGraph);
 
 	if (m_BigraphMaker.MakeBigraph(originalGraph))
 	{
@@ -44,6 +38,23 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 		return new Graph(firstGraph);
 	}
 
+	// Second lvl edge removing (edge 0 already removed) from index 1
+	for (int i = 1; i < firstGraph.m_NumberOfEdgesOriginal; i++)
+	{
+		//Graph * graph = new Graph(originalGraph);
+		Graph graph(firstGraph);
+		graph.RemoveEdge(i);
+		m_FirstLvlGraphs.push_back(graph);
+	}
+
+	TrySecondLvlGraphs();
+
+	if (m_BestGraph->m_NumberOfEdgesCurrent > 0)
+	{
+		return m_BestGraph;
+	}
+
+
 	// First lvl edge removing from index 1
 	//#pragma omp for schedule(static, originalGraph.m_NumberOfEdgesOriginal / NUMBER_OF_THREADS)
 	for (int i = 1; i < originalGraph.m_NumberOfEdgesOriginal; i++)
@@ -55,22 +66,25 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 		m_Graphs.push_back(graph);
 	}
 
-	// Second lvl edge removing (edge 0 already removed) from index 1
-	//#pragma omp barrier
-	//#pragma omp for schedule(static, (originalGraph.m_NumberOfEdgesOriginal - 1)/ NUMBER_OF_THREADS)
-	for (int i = 1; i < firstGraph.m_NumberOfEdgesOriginal; i++)
-	{
-		//Graph * graph = new Graph(originalGraph);
-		Graph graph(firstGraph);
-		graph.RemoveEdge(i);
-		m_Graphs.push_back(graph);
-	}
-
 	#pragma omp parallel num_threads(NUMBER_OF_THREADS)
-	{	
+	{
+		#pragma omp for schedule(static, m_FirstLvlGraphs.size() / NUMBER_OF_THREADS) 
+		for (unsigned i = 0; i < m_FirstLvlGraphs.size(); i++)
+		{
+			Graph & tmp = m_FirstLvlGraphs[i];
+			for (unsigned j = tmp.m_LastErasedEdge + 1; j < tmp.m_NumberOfEdgesOriginal; j++)
+			{
+				Graph newGraph(tmp);
+				newGraph.RemoveEdge(j);
+
+				#pragma omp critical
+				m_Graphs.push_back(newGraph);
+			}
+		}
+
 		//#pragma omp barrier
 		#pragma omp for schedule(static,1)
-		for (int i = 0; i < originalGraph.m_NumberOfEdgesOriginal; i++)
+		for (unsigned i = 0; i < m_Graphs.size(); i++)
 		{
 			FindMaxBigraphInternal(m_Graphs[i]);
 		}
@@ -78,6 +92,87 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 	}
 
 	return m_BestGraph;
+}
+
+void MaxBigraphSolver::InitializeBestGraph(Graph & originalGraph)
+{
+	m_BestGraph = new Graph(0);
+	m_BestGraph->m_Edges = originalGraph.m_Edges;
+	m_BestGraph->m_NumberOfEdgesOriginal = originalGraph.m_NumberOfEdgesOriginal;
+	m_BestGraph->m_NumberOfEdgesCurrent = 0;
+	m_BestGraph->m_EdgeMatrix = new bool[originalGraph.m_NumberOfEdgesOriginal];
+	memset((void*)m_BestGraph->m_EdgeMatrix, 0, originalGraph.m_NumberOfEdgesOriginal * sizeof(bool));
+}
+
+void MaxBigraphSolver::TrySecondLvlGraphs()
+{
+	queue<int> m_ColoredNodes;
+	set<int> m_ProcessedNodes;
+
+	#pragma parallel for schedule(static, m_FirstLvlGraphs.size() / NUMBER_OF_THREADS) num_threads(NUMBER_OF_THREADS) \
+	private(m_ColoredNodes, m_ProcessedNodes)
+	for (unsigned i = 0; i < m_FirstLvlGraphs.size(); i++)
+	{
+		Graph& graph = m_FirstLvlGraphs[i];
+		
+		if (graph.m_NumberOfEdgesCurrent < graph.m_NumberOfNodes - 1)
+		{
+			return;
+		}
+
+		m_ColoredNodes = queue<int>();
+		m_ProcessedNodes.clear();
+
+		graph.m_NodeColors[0] = White;
+		m_ColoredNodes.push(0);
+		bool coloringSuccessful = true;
+
+		while(!m_ColoredNodes.empty())
+		{
+			int nodeIndex = m_ColoredNodes.front();
+			m_ColoredNodes.pop();
+
+			Color neighbourColor = graph.m_NodeColors[nodeIndex] == Black ? White : Black;
+			
+			if (!graph.ColorNeighbourNodes(nodeIndex, neighbourColor))
+			{
+				//cout << "BigraphMaker::ColorNodes: UNABLE TO COLOR GRAPH" << endl;
+				coloringSuccessful = false;
+				break;
+			}
+
+			m_ProcessedNodes.insert(nodeIndex);
+
+			for (int i = 0; i < graph.m_NumberOfNodes; i++)
+			{
+				if (graph.AreNeighbours(nodeIndex, i))
+				{
+					if (m_ProcessedNodes.find(i) == m_ProcessedNodes.end())
+					{
+						//cout << "BigraphMaker::ColorNodes: Pushing not processed node: " << i << " to nodeToColor queue" << endl;
+						m_ColoredNodes.push(i);
+					}
+				}
+			}
+
+			if (m_ColoredNodes.empty())
+			{
+				int notColoredNode = graph.GetFirstUncoloredNode(); 
+				//cout << "BigraphMaker::ColorNodes: Nodes to color queue is empty. Index of first not yet colored node: " << notColoredNode << endl;
+				if (notColoredNode > -1)
+				{
+					graph.m_NodeColors[notColoredNode] = White;
+					m_ColoredNodes.push(notColoredNode);
+				}
+			}
+		} // End of graph coloring
+
+		if (coloringSuccessful)
+		{
+			AcceptBetterGraph(&graph);
+			return;
+		}
+	}
 }
 
 void MaxBigraphSolver::FindMaxBigraphInternal(Graph graph)
