@@ -1,4 +1,5 @@
 #include <iostream>
+#include <mpi.h>
 #include "maxBigraphSolver.h"
 #include "graphLoader.h"
 #include "graph.h"
@@ -8,11 +9,12 @@ using namespace std;
 
 void DeleteGraphs(Graph * loadedGraph, Graph * resultGraph);
 
-int main(int args, char * argv[])
+int main(int argc, char * argv[])
 {
-	cout << "Start of application. Number of arguments: " << args << endl;
+	MPI_Init(&argc, &argv);
+	cout << "Start of application. Number of arguments: " << argc << endl;
 
-	if (args < 2) return 1;
+	if (argc < 2) return 1;
 
 	GraphLoader loader;
 	MaxBigraphSolver solver;
@@ -30,6 +32,7 @@ int main(int args, char * argv[])
 	/* DELETE SECTION */
 	DeleteGraphs(graph, result);
 
+	MPI_Finalize();
 	return 0;
 }
 

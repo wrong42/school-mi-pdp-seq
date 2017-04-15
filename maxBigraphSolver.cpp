@@ -3,6 +3,7 @@
 #include <set>
 #include <cstring>
 #include <omp.h>
+#include <mpi.h>
 #include "maxBigraphSolver.h"
 
 #define NUMBER_OF_THREADS 4
@@ -22,6 +23,7 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 	cout << "Finding max bigraph" << endl;
 	InitializeBestGraph(originalGraph);
 
+	// Try original graph
 	if (m_BigraphMaker.MakeBigraph(originalGraph))
 	{
 		cout << "ORIGINAL GRAPH IS RESULT" << endl;
@@ -32,7 +34,6 @@ Graph * MaxBigraphSolver::FindMaxBigraph(Graph & originalGraph)
 	Graph firstGraph(originalGraph);
 	firstGraph.RemoveEdge(0);
 	firstGraph.m_LastErasedEdge = 0;
-
 	if (m_BigraphMaker.MakeBigraph(firstGraph))
 	{
 		return new Graph(firstGraph);
@@ -127,6 +128,7 @@ void MaxBigraphSolver::TrySecondLvlGraphs()
 		m_ColoredNodes.push(0);
 		bool coloringSuccessful = true;
 
+		// Coloring graph
 		while(!m_ColoredNodes.empty())
 		{
 			int nodeIndex = m_ColoredNodes.front();
