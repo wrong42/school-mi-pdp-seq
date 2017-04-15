@@ -13,12 +13,11 @@ using namespace std;
 
 #define NUMBER_OF_THREADS 4
 
-enum MPI_TAGS {WORK, DONE, FINISHED};
+enum MPI_TAGS {WORK, DONE, FINISHED, UPDATE_BG};
 
 
 Graph * m_BestGraph;
 vector<Graph> m_Graphs;
-vector<Graph> m_FirstLvlGraphs;
 BigraphMaker m_BigraphMaker;
 
 void DeleteGraphs(Graph * loadedGraph, Graph * resultGraph)
@@ -181,9 +180,67 @@ int main(int argc, char * argv[])
 			return 0;
 		}
 
+		int numberOfProceses;
+
+		MPI_Comm_size(MPI_COMM_WORLD, &numberOfProceses);
+
+		for (int i = 1; i < numberOfProceses; i++)
+		{
+			MPI_Send(&i, 1, MPI_INT, i, WORK, MPI_COMM_WORLD);
+		}
+
+		int removedEdgeIndex = numberOfProceses - 1;
+
+		MPI_Status status;
+		int bestGraphBySlave, slavesWorking = numberOfProceses - 1;
+		
+		while (slavesWorking > 0)
+		{
+			MPI_Recv(&bestGraphBySlave, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+
+			switch(status.MPI_TAG)
+			{
+				case DONE:
+					if (bestGraphBySlave > m_BestGraph->m_NumberOfEdgesCurrent)
+					{
+						// UPDATE BEST GRAPH TO SLAVES
+						for (int i = 1; i < numberOfProceses; i++)
+						{
+							MPI_Send(&bestGraphBySlave, 1, MPI_INT, i, UPDATE_BG, MPI_COMM_WORLD);
+						}
+						// UPDATE MY BEST GRAPH
+					}
+					if (removedEdgeIndex < originalGraph->m_NumberOfEdgesOriginal)
+					{
+						MPI_Send(&removedEdgeIndex, 1, MPI_INT, status.MPI_SOURCE, WORK, MPI_COMM_WORLD);
+						removedEdgeIndex++;
+						break;			
+					}
+					else
+					{
+						MPI_Send(&removedEdgeIndex, 1, MPI_INT, status.MPI_SOURCE, FINISHED, MPI_COMM_WORLD);
+						--slavesWorking;
+					}
+
+					break;
+				default:
+					cout << "WTF SHOULD I DO NOW?" << endl;
+			}
+		}
+
+		/* GET MAX BIPARTHITE GRAPH */
+		cout << "RESULT Graph: NumberOfEdges = " << m_BestGraph->m_NumberOfEdgesCurrent << endl;
+		m_BestGraph->Print();
+
+		/* DELETE SECTION */
+		DeleteGraphs(originalGraph, m_BestGraph);
+
+	}
+	else
+	{
 		#pragma omp parallel num_threads(NUMBER_OF_THREADS)
 		{
-			#pragma omp for schedule(static, m_FirstLvlGraphs.size() / NUMBER_OF_THREADS) 
+/*			#pragma omp for schedule(static, m_FirstLvlGraphs.size() / NUMBER_OF_THREADS) 
 			for (unsigned i = 0; i < m_FirstLvlGraphs.size(); i++)
 			{
 				Graph & tmp = m_FirstLvlGraphs[i];
@@ -195,7 +252,7 @@ int main(int argc, char * argv[])
 					#pragma omp critical
 					m_Graphs.push_back(newGraph);
 				}
-			}
+			}*/
 
 			//#pragma omp barrier
 			#pragma omp for schedule(static,1)
@@ -205,18 +262,6 @@ int main(int argc, char * argv[])
 			}
 			
 		}
-
-		/* GET MAX BIPARTHITE GRAPH */
-		cout << "RESULT Graph: NumberOfEdges = " << m_BestGraph->m_NumberOfEdgesCurrent << endl;
-		m_BestGraph->Print();
-
-		/* DELETE SECTION */
-		DeleteGraphs(originalGraph, m_BestGraph);
-
-	}
-	else if(proc_num == 1)
-	{
-
 	}
 
 	MPI_Finalize();
