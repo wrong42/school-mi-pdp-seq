@@ -9,9 +9,11 @@
 #include "graph.h"
 #include "edge.h"
 
+using namespace std;
+
 #define NUMBER_OF_THREADS 4
 
-using namespace std;
+enum MPI_TAGS {};
 
 
 Graph * m_BestGraph;
@@ -56,79 +58,6 @@ void AcceptBetterGraph(Graph * graph)
 	{
 		delete m_BestGraph;
 		m_BestGraph = new Graph(*graph);	
-	}
-}
-
-
-void TrySecondLvlGraphs()
-{
-	queue<int> m_ColoredNodes;
-	set<int> m_ProcessedNodes;
-
-	#pragma parallel for schedule(static, m_FirstLvlGraphs.size() / NUMBER_OF_THREADS) num_threads(NUMBER_OF_THREADS) \
-	private(m_ColoredNodes, m_ProcessedNodes)
-	for (unsigned i = 0; i < m_FirstLvlGraphs.size(); i++)
-	{
-		Graph& graph = m_FirstLvlGraphs[i];
-		
-		if (graph.m_NumberOfEdgesCurrent < graph.m_NumberOfNodes - 1)
-		{
-			return;
-		}
-
-		m_ColoredNodes = queue<int>();
-		m_ProcessedNodes.clear();
-
-		graph.m_NodeColors[0] = White;
-		m_ColoredNodes.push(0);
-		bool coloringSuccessful = true;
-
-		// Coloring graph
-		while(!m_ColoredNodes.empty())
-		{
-			int nodeIndex = m_ColoredNodes.front();
-			m_ColoredNodes.pop();
-
-			Color neighbourColor = graph.m_NodeColors[nodeIndex] == Black ? White : Black;
-			
-			if (!graph.ColorNeighbourNodes(nodeIndex, neighbourColor))
-			{
-				//cout << "BigraphMaker::ColorNodes: UNABLE TO COLOR GRAPH" << endl;
-				coloringSuccessful = false;
-				break;
-			}
-
-			m_ProcessedNodes.insert(nodeIndex);
-
-			for (int i = 0; i < graph.m_NumberOfNodes; i++)
-			{
-				if (graph.AreNeighbours(nodeIndex, i))
-				{
-					if (m_ProcessedNodes.find(i) == m_ProcessedNodes.end())
-					{
-						//cout << "BigraphMaker::ColorNodes: Pushing not processed node: " << i << " to nodeToColor queue" << endl;
-						m_ColoredNodes.push(i);
-					}
-				}
-			}
-
-			if (m_ColoredNodes.empty())
-			{
-				int notColoredNode = graph.GetFirstUncoloredNode(); 
-				//cout << "BigraphMaker::ColorNodes: Nodes to color queue is empty. Index of first not yet colored node: " << notColoredNode << endl;
-				if (notColoredNode > -1)
-				{
-					graph.m_NodeColors[notColoredNode] = White;
-					m_ColoredNodes.push(notColoredNode);
-				}
-			}
-		} // End of graph coloring
-
-		if (coloringSuccessful)
-		{
-			AcceptBetterGraph(&graph);
-			return;
-		}
 	}
 }
 
@@ -232,9 +161,9 @@ int main(int argc, char * argv[])
 		GraphLoader loader;
 
 		/* LOAD GRAPH FROM FILE */
-		Graph * graph = loader.LoadGraph(argv[1]);
-		cout << "Loaded Graph: NumberOfEdges = " << graph->m_NumberOfEdgesOriginal << endl;
-		graph->Print();	
+		Graph * originalGraph = loader.LoadGraph(argv[1]);
+		cout << "Loaded Graph: NumberOfEdges = " << originalGraph->m_NumberOfEdgesOriginal << endl;
+		originalGraph->Print();	
 	
 	
 
@@ -243,50 +172,13 @@ int main(int argc, char * argv[])
 		/***************************************************/
 
 		cout << "Finding max bigraph" << endl;
-		InitializeBestGraph(originalGraph);
+		InitializeBestGraph(*originalGraph);
 
 		// Try original graph
-		if (m_BigraphMaker.MakeBigraph(originalGraph))
+		if (m_BigraphMaker.MakeBigraph(*originalGraph))
 		{
 			cout << "ORIGINAL GRAPH IS RESULT" << endl;
-			return &originalGraph;
-		}
-
-		// Zkusit graf bez jedne hrany a pak pridat vsechny podgrafy
-		Graph firstGraph(originalGraph);
-		firstGraph.RemoveEdge(0);
-		firstGraph.m_LastErasedEdge = 0;
-		if (m_BigraphMaker.MakeBigraph(firstGraph))
-		{
-			return new Graph(firstGraph);
-		}
-
-		// Second lvl edge removing (edge 0 already removed) from index 1
-		for (int i = 1; i < firstGraph.m_NumberOfEdgesOriginal; i++)
-		{
-			//Graph * graph = new Graph(originalGraph);
-			Graph graph(firstGraph);
-			graph.RemoveEdge(i);
-			m_FirstLvlGraphs.push_back(graph);
-		}
-
-		TrySecondLvlGraphs();
-
-		if (m_BestGraph->m_NumberOfEdgesCurrent > 0)
-		{
-			return m_BestGraph;
-		}
-
-
-		// First lvl edge removing from index 1
-		//#pragma omp for schedule(static, originalGraph.m_NumberOfEdgesOriginal / NUMBER_OF_THREADS)
-		for (int i = 1; i < originalGraph.m_NumberOfEdgesOriginal; i++)
-		{
-			//Graph * graph = new Graph(originalGraph);
-			Graph graph(originalGraph);
-			graph.RemoveEdge(i);
-			graph.m_LastErasedEdge = i;
-			m_Graphs.push_back(graph);
+			return 0;
 		}
 
 		#pragma omp parallel num_threads(NUMBER_OF_THREADS)
@@ -314,23 +206,17 @@ int main(int argc, char * argv[])
 			
 		}
 
-
-
-
-
-
 		/* GET MAX BIPARTHITE GRAPH */
-		cout << "RESULT Graph: NumberOfEdges = " << result->m_NumberOfEdgesCurrent << endl;
-		result->Print();
+		cout << "RESULT Graph: NumberOfEdges = " << m_BestGraph->m_NumberOfEdgesCurrent << endl;
+		m_BestGraph->Print();
 
 		/* DELETE SECTION */
-		DeleteGraphs(graph, result);
+		DeleteGraphs(originalGraph, m_BestGraph);
 
 	}
 	else if(proc_num == 1)
 	{
-		TrySecondLvlGraphs();
-		
+
 	}
 
 	MPI_Finalize();
