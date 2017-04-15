@@ -13,10 +13,11 @@ using namespace std;
 
 #define NUMBER_OF_THREADS 4
 
-enum MPI_TAGS {WORK, DONE, FINISHED, UPDATE_BG};
+enum MPI_TAGS {WORK = 0, DONE = 1, FINISHED = 2, UPDATE_BG = 3};
 
 
 Graph * m_BestGraph;
+Graph * m_LoadedGraph;
 vector<Graph> m_Graphs;
 BigraphMaker m_BigraphMaker;
 
@@ -137,9 +138,8 @@ void FindMaxBigraphInternal(Graph graph)
 			Graph childGraph(graph);
 			childGraph.RemoveEdge(i);
 			//cout << "Adding graph to stack: NumberOfEdges: " << childGraph->m_Edges.size() << endl;
-			
+			#pragma omp task
 			FindMaxBigraphInternal(childGraph);
-	
 		}
 	}
 }
@@ -161,6 +161,7 @@ int main(int argc, char * argv[])
 
 		/* LOAD GRAPH FROM FILE */
 		Graph * originalGraph = loader.LoadGraph(argv[1]);
+		m_LoadedGraph = originalGraph;
 		cout << "Loaded Graph: NumberOfEdges = " << originalGraph->m_NumberOfEdgesOriginal << endl;
 		originalGraph->Print();	
 	
@@ -238,29 +239,37 @@ int main(int argc, char * argv[])
 	}
 	else
 	{
-		#pragma omp parallel num_threads(NUMBER_OF_THREADS)
+		MPI_Status status;
+		int msg, maxNumberOfEdges = 0;
+		while(true)
 		{
-/*			#pragma omp for schedule(static, m_FirstLvlGraphs.size() / NUMBER_OF_THREADS) 
-			for (unsigned i = 0; i < m_FirstLvlGraphs.size(); i++)
+			MPI_Recv(&msg, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);	
+			switch(status.MPI_TAG)
 			{
-				Graph & tmp = m_FirstLvlGraphs[i];
-				for (unsigned j = tmp.m_LastErasedEdge + 1; j < tmp.m_NumberOfEdgesOriginal; j++)
+				case WORK:
 				{
-					Graph newGraph(tmp);
-					newGraph.RemoveEdge(j);
+					Graph graphToProcess(*m_LoadedGraph);
+					graphToProcess.RemoveEdge(msg);
+					
+					#pragma omp parallel num_threads(NUMBER_OF_THREADS)
+					{
+						#pragma omp single
+							FindMaxBigraphInternal(graphToProcess);
+					}
 
-					#pragma omp critical
-					m_Graphs.push_back(newGraph);
+					break;
 				}
-			}*/
-
-			//#pragma omp barrier
-			#pragma omp for schedule(static,1)
-			for (unsigned i = 0; i < m_Graphs.size(); i++)
-			{
-				FindMaxBigraphInternal(m_Graphs[i]);
+				case UPDATE_BG:
+					maxNumberOfEdges = msg;
+					break;
+				case FINISHED:
+					return 0;
+					break;
+				default:
+					cout << "DONT KNOW THIS TAG: " << status.MPI_TAG << endl;
+					return -1;
+					break;
 			}
-			
 		}
 	}
 
