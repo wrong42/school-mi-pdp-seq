@@ -13,7 +13,7 @@ using namespace std;
 
 #define NUMBER_OF_THREADS 4
 
-enum MPI_TAGS {};
+enum MPI_TAGS {WORK, DONE, FINISHED};
 
 
 Graph * m_BestGraph;
