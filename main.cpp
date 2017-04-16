@@ -15,10 +15,9 @@ using namespace std;
 
 enum MPI_TAGS {WORK = 0, DONE = 1, FINISHED = 2, UPDATE_BG = 3};
 
-
+int maxFoundBigraphByEdge = 0;
 Graph * m_BestGraph;
 Graph * m_LoadedGraph;
-vector<Graph> m_Graphs;
 BigraphMaker m_BigraphMaker;
 
 void DeleteGraphs(Graph * loadedGraph, Graph * resultGraph)
@@ -257,6 +256,7 @@ int main(int argc, char * argv[])
 							FindMaxBigraphInternal(graphToProcess);
 					}
 
+					MPI_Send(&maxFoundBigraphByEdge, 1, MPI_INT, 0, DONE, MPI_COMM_WORLD);
 					break;
 				}
 				case UPDATE_BG:
