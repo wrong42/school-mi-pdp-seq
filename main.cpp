@@ -205,7 +205,8 @@ int main(int argc, char * argv[])
 
 		/* DELETE SECTION */
 		DeleteGraphs(m_LoadedGraph);
-
+		MPI_Finalize();
+		return 0;
 	}
 	else
 	{
@@ -230,7 +231,7 @@ int main(int argc, char * argv[])
 							FindMaxBigraphInternal(graphToProcess);
 					}
 
-					cout << proc_num << ". RESULT - best graph - number of edges = " << m_MaxFoundBigraphByEdge << endl;
+					//cout << proc_num << ". RESULT - best graph - number of edges = " << m_MaxFoundBigraphByEdge << endl;
 					MPI_Send(&m_MaxFoundBigraphByEdge, 1, MPI_INT, 0, DONE, MPI_COMM_WORLD);
 					break;
 				}
@@ -240,8 +241,8 @@ int main(int argc, char * argv[])
 					break;
 				case FINISHED:
 					cout << proc_num << ". RECIEVED FINISHED TAG" << endl;
+					MPI_Finalize();
 					return 0;
-					break;
 				default:
 					cout << proc_num << ". DONT KNOW THIS TAG: " << status.MPI_TAG << endl;
 					return -1;
@@ -249,7 +250,4 @@ int main(int argc, char * argv[])
 			}
 		}
 	}
-
-	MPI_Finalize();
-	return 0;
 }
