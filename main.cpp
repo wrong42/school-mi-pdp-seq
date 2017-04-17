@@ -44,14 +44,17 @@ void FindMaxBigraphInternal(Graph graph)
 	}
 
 	// Test if one of the other processes found a better solution
-	MPI_Test(&recieveRequest, &flag, &status);
-	if (flag)
+	#pragma omp critical
 	{
-		cout << proc_num << ". Recieved UPDATE_BG from MASTER - edges: " << bestGraphUpdate << endl;
-		#pragma omp atomic write
-			m_MaxFoundBigraphByEdge = bestGraphUpdate;
+		MPI_Test(&recieveRequest, &flag, &status);
+		if (flag)
+		{
+			//cout << proc_num << ". Recieved UPDATE_BG from MASTER - edges: " << bestGraphUpdate << endl;
+			#pragma omp atomic write
+				m_MaxFoundBigraphByEdge = bestGraphUpdate;
 
-		MPI_Irecv(&bestGraphUpdate, 1, MPI_INT, 0, UPDATE_BG, MPI_COMM_WORLD, &recieveRequest);
+			MPI_Irecv(&bestGraphUpdate, 1, MPI_INT, 0, UPDATE_BG, MPI_COMM_WORLD, &recieveRequest);
+		}
 	}
 
 	/********** COLORING GRAPH SECTION **********/
@@ -138,10 +141,6 @@ void FindMaxBigraphInternal(Graph graph)
 
 int main(int argc, char * argv[])
 {
-	MPI_Init(&argc, &argv);
-	MPI_Comm_rank(MPI_COMM_WORLD, &proc_num);
-	MPI_Comm_size(MPI_COMM_WORLD, &numberOfProceses);
-
 	//cout << proc_num << ". Start of application. Number of arguments: " << argc << endl;
 	if (argc < 2)
 	{
@@ -149,13 +148,16 @@ int main(int argc, char * argv[])
 		return 1;
 	}
 
-		/* LOAD GRAPH FROM FILE */
-		//cout <<  proc_num << ". Loading graph." << endl;
-		GraphLoader loader;
-		m_LoadedGraph = loader.LoadGraph(argv[1]);
-		//cout << proc_num << ". Loaded Graph: NumberOfEdges = " << m_LoadedGraph->m_NumberOfEdgesOriginal << endl;
-		//m_LoadedGraph->Print();	
+	/* LOAD GRAPH FROM FILE */
+	//cout <<  proc_num << ". Loading graph." << endl;
+	GraphLoader loader;
+	m_LoadedGraph = loader.LoadGraph(argv[1]);
+	//cout << proc_num << ". Loaded Graph: NumberOfEdges = " << m_LoadedGraph->m_NumberOfEdgesOriginal << endl;
+	//m_LoadedGraph->Print();	
 
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &proc_num);
+	MPI_Comm_size(MPI_COMM_WORLD, &numberOfProceses);
 
 	if (proc_num == 0)
 	{
@@ -192,7 +194,10 @@ int main(int argc, char * argv[])
 						for (int i = 1; i < numberOfProceses; i++)
 						{
 							if (i != status.MPI_SOURCE)
-								MPI_Isend(&bestGraphBySlave, 1, MPI_INT, i, UPDATE_BG, MPI_COMM_WORLD, &sendRequest);
+								{
+									MPI_Send(&m_MaxFoundBigraphByEdge, 1, MPI_INT, i, UPDATE_BG, MPI_COMM_WORLD);
+									//MPI_Isend(&m_MaxFoundBigraphByEdge, 1, MPI_INT, i, UPDATE_BG, MPI_COMM_WORLD, &recieveRequest);
+								}
 						}
 					}
 					break;
@@ -256,7 +261,7 @@ int main(int argc, char * argv[])
 					graphToProcess.RemoveEdge(msg);
 
 					MPI_Irecv(&bestGraphUpdate, 1, MPI_INT, 0, UPDATE_BG, MPI_COMM_WORLD, &recieveRequest);
-					#pragma omp parallel num_threads(NUMBER_OF_THREADS)
+					#pragma omp parallel private(bestGraphUpdate, flag) num_threads(NUMBER_OF_THREADS)
 					{
 						#pragma omp single
 							FindMaxBigraphInternal(graphToProcess);
@@ -267,11 +272,12 @@ int main(int argc, char * argv[])
 					break;
 				}
 				case UPDATE_BG:
-					cout << proc_num << ". Recieved UPDATE_BG from MASTER: edges" << msg << endl;
+					//cout << proc_num << ". Recieved UPDATE_BG from MASTER: edges" << msg << endl;
 					m_MaxFoundBigraphByEdge = msg;
 					break;
 				case FINISHED:
 					cout << proc_num << ". RECIEVED FINISHED TAG" << endl;
+					DeleteGraphs(m_LoadedGraph);
 					MPI_Finalize();
 					return 0;
 				default:
