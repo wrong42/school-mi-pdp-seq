@@ -13,20 +13,14 @@ using namespace std;
 
 #define NUMBER_OF_THREADS 4
 
-enum MPI_TAGS {WORK = 0, DONE = 1, FINISHED = 2, UPDATE_BG = 3};
+enum MPI_TAGS {WORK = 0, DONE = 1, FINISHED = 2, UPDATE_BG = 3, INIT_GRAPH = 4};
 
-int maxFoundBigraphByEdge = 0;
-Graph * m_BestGraph;
+int m_MaxFoundBigraphByEdge = 0;
 Graph * m_LoadedGraph;
 BigraphMaker m_BigraphMaker;
 
-void DeleteGraphs(Graph * loadedGraph, Graph * resultGraph)
-{
-	if (resultGraph != loadedGraph)
-	{
-		delete resultGraph;
-	}
-	
+void DeleteGraphs(Graph * loadedGraph)
+{	
 	for (unsigned i = 0; i < loadedGraph->m_NumberOfEdgesOriginal; i++)
 	{
 		delete loadedGraph->m_Edges[i];
@@ -36,30 +30,6 @@ void DeleteGraphs(Graph * loadedGraph, Graph * resultGraph)
 	delete loadedGraph;
 }
 
-void InitializeBestGraph(Graph & originalGraph)
-{
-	m_BestGraph = new Graph(0);
-	m_BestGraph->m_Edges = originalGraph.m_Edges;
-	m_BestGraph->m_NumberOfEdgesOriginal = originalGraph.m_NumberOfEdgesOriginal;
-	m_BestGraph->m_NumberOfEdgesCurrent = 0;
-	m_BestGraph->m_EdgeMatrix = new bool[originalGraph.m_NumberOfEdgesOriginal];
-	memset((void*)m_BestGraph->m_EdgeMatrix, 0, originalGraph.m_NumberOfEdgesOriginal * sizeof(bool));
-}
-
-void AcceptBetterGraph(Graph * graph)
-{
-	cout << "FOUND BETTER GRAPH: NumberOfEdges = " << graph->m_NumberOfEdgesCurrent << endl;
-
-	/*if (m_BestGraph != m_OriginalGraph)
-		delete m_BestGraph;*/
-
-	#pragma omp critical
-	{
-		delete m_BestGraph;
-		m_BestGraph = new Graph(*graph);	
-	}
-}
-
 void FindMaxBigraphInternal(Graph graph)
 {
 	if (graph.m_NumberOfEdgesCurrent < graph.m_NumberOfNodes - 1)
@@ -67,6 +37,7 @@ void FindMaxBigraphInternal(Graph graph)
 		return;
 	}
 
+	/********** COLORING GRAPH SECTION **********/
 	queue<int> m_ColoredNodes;
 	set<int> m_ProcessedNodes;
 
@@ -112,11 +83,14 @@ void FindMaxBigraphInternal(Graph graph)
 				m_ColoredNodes.push(notColoredNode);
 			}
 		}
-	} // End of graph coloring
+	}
+
+	/**********END OF COLORING GRAPH SECTION **********/
 
 	if (coloringSuccessful)
 	{
-		AcceptBetterGraph(&graph);
+		#pragma omp atomic write
+			m_MaxFoundBigraphByEdge = graph.m_NumberOfEdgesCurrent;
 		return;
 	}
 	else if (m_ColoredNodes.size() == 0 && m_ProcessedNodes.size() < graph.m_NumberOfNodes)
@@ -127,18 +101,17 @@ void FindMaxBigraphInternal(Graph graph)
 	int numberOfBestGraphEdges = 0;
 	
 	#pragma omp atomic read
-	numberOfBestGraphEdges = m_BestGraph->m_NumberOfEdgesCurrent;
+	numberOfBestGraphEdges = m_MaxFoundBigraphByEdge;
 
 	if (graph.m_NumberOfEdgesCurrent - 1 > numberOfBestGraphEdges)
 	{
 		for (unsigned i = graph.m_LastErasedEdge + 1; i < graph.m_NumberOfEdgesOriginal; i++)
 		{
-			//Graph * childGraph = new Graph(*graph);
 			Graph childGraph(graph);
 			childGraph.RemoveEdge(i);
-			//cout << "Adding graph to stack: NumberOfEdges: " << childGraph->m_Edges.size() << endl;
+			
 			#pragma omp task
-			FindMaxBigraphInternal(childGraph);
+				FindMaxBigraphInternal(childGraph);
 		}
 	}
 }
@@ -147,62 +120,57 @@ int main(int argc, char * argv[])
 {
 	MPI_Init(&argc, &argv);
 
-	int proc_num;
+	int proc_num, numberOfProceses;
 	MPI_Comm_rank(MPI_COMM_WORLD, &proc_num);
+
+	MPI_Comm_size(MPI_COMM_WORLD, &numberOfProceses);
+
+	//cout << proc_num << ". Start of application. Number of arguments: " << argc << endl;
+	if (argc < 2)
+	{
+		cout << proc_num << ". No input file selected. Closing the application." << endl;
+		return 1;
+	}
+
+		/* LOAD GRAPH FROM FILE */
+		//cout <<  proc_num << ". Loading graph." << endl;
+		GraphLoader loader;
+		m_LoadedGraph = loader.LoadGraph(argv[1]);
+		//cout << proc_num << ". Loaded Graph: NumberOfEdges = " << m_LoadedGraph->m_NumberOfEdgesOriginal << endl;
+		//m_LoadedGraph->Print();	
+
 
 	if (proc_num == 0)
 	{
-		cout << "Start of application. Number of arguments: " << argc << endl;
-
-		if (argc < 2) return 1;
-
-		GraphLoader loader;
-
-		/* LOAD GRAPH FROM FILE */
-		Graph * originalGraph = loader.LoadGraph(argv[1]);
-		m_LoadedGraph = originalGraph;
-		cout << "Loaded Graph: NumberOfEdges = " << originalGraph->m_NumberOfEdgesOriginal << endl;
-		originalGraph->Print();	
-	
-	
-
-		/***************************************************/
-		/************** FIND MAX BIGRAPH *******************/
-		/***************************************************/
-
-		cout << "Finding max bigraph" << endl;
-		InitializeBestGraph(*originalGraph);
-
 		// Try original graph
-		if (m_BigraphMaker.MakeBigraph(*originalGraph))
+		if (m_BigraphMaker.MakeBigraph(*m_LoadedGraph))
 		{
 			cout << "ORIGINAL GRAPH IS RESULT" << endl;
 			return 0;
 		}
 
-		int numberOfProceses;
+		int removedEdgeIndex = 0;
 
-		MPI_Comm_size(MPI_COMM_WORLD, &numberOfProceses);
-
-		for (int i = 1; i < numberOfProceses; i++)
+		for (int i = 1; i < numberOfProceses; i++, removedEdgeIndex++)
 		{
-			MPI_Send(&i, 1, MPI_INT, i, WORK, MPI_COMM_WORLD);
+			//cout << proc_num << ". Sending msg to slave " << i << endl;
+			MPI_Send(&removedEdgeIndex, 1, MPI_INT, i, WORK, MPI_COMM_WORLD);
 		}
-
-		int removedEdgeIndex = numberOfProceses - 1;
 
 		MPI_Status status;
 		int bestGraphBySlave, slavesWorking = numberOfProceses - 1;
-		
+
 		while (slavesWorking > 0)
 		{
 			MPI_Recv(&bestGraphBySlave, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-
+			//cout << proc_num << ". SLAVES WORKING: " << slavesWorking << " (before switch)" << endl;
 			switch(status.MPI_TAG)
 			{
 				case DONE:
-					if (bestGraphBySlave > m_BestGraph->m_NumberOfEdgesCurrent)
+				{
+					if (bestGraphBySlave > m_MaxFoundBigraphByEdge)
 					{
+						m_MaxFoundBigraphByEdge = bestGraphBySlave;
 						// UPDATE BEST GRAPH TO SLAVES
 						for (int i = 1; i < numberOfProceses; i++)
 						{
@@ -210,7 +178,7 @@ int main(int argc, char * argv[])
 						}
 						// UPDATE MY BEST GRAPH
 					}
-					if (removedEdgeIndex < originalGraph->m_NumberOfEdgesOriginal)
+					if (removedEdgeIndex < m_LoadedGraph->m_NumberOfEdgesOriginal)
 					{
 						MPI_Send(&removedEdgeIndex, 1, MPI_INT, status.MPI_SOURCE, WORK, MPI_COMM_WORLD);
 						removedEdgeIndex++;
@@ -223,17 +191,20 @@ int main(int argc, char * argv[])
 					}
 
 					break;
+				}
 				default:
 					cout << "WTF SHOULD I DO NOW?" << endl;
 			}
+
+			//cout << proc_num << ". SLAVES WORKING: " << slavesWorking << " (after switch)" << endl;
 		}
 
 		/* GET MAX BIPARTHITE GRAPH */
-		cout << "RESULT Graph: NumberOfEdges = " << m_BestGraph->m_NumberOfEdgesCurrent << endl;
-		m_BestGraph->Print();
+		cout << proc_num << ". ALL SLAVES HAVE ENDED " << endl;
+		cout << "RESULT Graph: NumberOfEdges = " << m_MaxFoundBigraphByEdge << endl;
 
 		/* DELETE SECTION */
-		DeleteGraphs(originalGraph, m_BestGraph);
+		DeleteGraphs(m_LoadedGraph);
 
 	}
 	else
@@ -242,31 +213,37 @@ int main(int argc, char * argv[])
 		int msg, maxNumberOfEdges = 0;
 		while(true)
 		{
+			//cout << proc_num << ". WAITING FOR MSG" << endl;
 			MPI_Recv(&msg, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);	
-			switch(status.MPI_TAG)
+			//cout << proc_num << ". Msg recieved with tag: " << status.MPI_TAG << endl;
+			switch(status.MPI_TAG) 
 			{
 				case WORK:
 				{
+					//cout << proc_num << ". Recieved message to work: edgeToRemove = " << msg << endl;
 					Graph graphToProcess(*m_LoadedGraph);
 					graphToProcess.RemoveEdge(msg);
-					
+
 					#pragma omp parallel num_threads(NUMBER_OF_THREADS)
 					{
 						#pragma omp single
 							FindMaxBigraphInternal(graphToProcess);
 					}
 
-					MPI_Send(&maxFoundBigraphByEdge, 1, MPI_INT, 0, DONE, MPI_COMM_WORLD);
+					cout << proc_num << ". RESULT - best graph - number of edges = " << m_MaxFoundBigraphByEdge << endl;
+					MPI_Send(&m_MaxFoundBigraphByEdge, 1, MPI_INT, 0, DONE, MPI_COMM_WORLD);
 					break;
 				}
 				case UPDATE_BG:
-					maxNumberOfEdges = msg;
+					//cout << proc_num << ". RECIEVED TAG: " << status.MPI_TAG << endl;
+					m_MaxFoundBigraphByEdge = msg;
 					break;
 				case FINISHED:
+					cout << proc_num << ". RECIEVED FINISHED TAG" << endl;
 					return 0;
 					break;
 				default:
-					cout << "DONT KNOW THIS TAG: " << status.MPI_TAG << endl;
+					cout << proc_num << ". DONT KNOW THIS TAG: " << status.MPI_TAG << endl;
 					return -1;
 					break;
 			}
